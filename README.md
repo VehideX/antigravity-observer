@@ -1,6 +1,6 @@
 # Gemini 猫娘观察台 · 反重力观察窗（Antigravity Observer v1.2.0）
 
-> 专为 **Google Antigravity 2.0** 打造的应用内紧贴右下角 **Gemini 猫娘桌面挂件**与**上下文 / Token / 额度观察窗**（GitHub 仓库：`antigravity-observer`，插件 ID：`gemini-neko-cockpit`，兼容保留 `AG_ZH` 中文汉化补丁）。
+> 专为 **Google Antigravity ** 打造的应用内紧贴右下角 **Gemini 猫娘桌面挂件**与**上下文 / Token / 额度观察窗**（GitHub 仓库：`antigravity-observer`，插件 ID：`gemini-neko-cockpit`，兼容保留 `AG_ZH` 中文汉化补丁）。
 
 [![version](https://img.shields.io/badge/version-v1.2.0-6366f1.svg)](https://github.com/yunjuanyunshu114-byte/antigravity-observer/releases)
 [![Antigravity](https://img.shields.io/badge/Antigravity-2.0-8b5cf6.svg)](https://github.com/yunjuanyunshu114-byte/antigravity-observer)
