@@ -2,7 +2,7 @@
   "name": "gemini-neko-cockpit",
   "displayName": "Gemini 猫娘观察台 · Antigravity Observer",
   "version": "1.2.0",
-  "description": "Google Antigravity 2.0 右下角 Gemini 猫娘挂件与上下文观察窗：平时静默呈现 Gemini 娘主形象，思考切换吃大米差分，戳一下触发 >< 差分、Q弹动画与可选音效，悬停/固定浮现上下文长度、Token 消耗与模型 5h/周剩余额度，兼容底部统计栏与 Sidecar 观察面板。",
+  "description": "Google Antigravity 2.0 应用内紧贴右下角 Gemini 猫娘挂件与上下文观察窗：平时静默显示主形象，思考时切换吃大米差分，左键三段式椭圆思考气泡展示额度/上下文/台词与 10 秒每轮消耗播报，右键弹出详情卡片与独立挂件设置（支持自定义形象、对话与气泡大小），兼容输入框下方统计栏与 Sidecar 观察面板。",
   "logo": "assets/logo.png",
   "suggestedPrompts": [
     "打开反重力观察窗，看看当前上下文占用和缓存命中率",

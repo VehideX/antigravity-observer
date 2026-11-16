@@ -441,7 +441,7 @@ async function main() {
       } else {
         console.log('[gemini-neko-cockpit] Antigravity is running; ASAR bridge validated & staged at:');
         console.log('  ', built.stagedPath);
-        console.log('  Close Antigravity and run `双击安装观察窗补丁.bat` (or `node setup.cjs --apply-staged --kill --relaunch`) to activate the in-window observer bar.');
+        console.log('  Close Antigravity and run `双击安装观察窗补丁.bat` (or `node setup.cjs --apply-staged --kill --relaunch`) to activate the Gemini catgirl widget & context observer.');
       }
     }
   }
