@@ -1,0 +1,12 @@
+{
+  "name": "gemini-neko-cockpit",
+  "displayName": "Gemini 猫猫观察台 · Neko Cockpit",
+  "version": "1.0.0",
+  "description": "整合开源监控与桌宠能力：上下文窗口深度观察、轮/步/tok/s/精确缓存命中状态栏、以及窗口一角可按压交互的 Gemini 猫猫（实时查看额度、用量与上下文）。",
+  "logo": "assets/logo.png",
+  "suggestedPrompts": [
+    "打开 Gemini 猫猫上下文观察窗口，看看当前上下文占用和缓存命中率",
+    "检查我当前的 Gemini / Claude 模型额度与本轮消耗情况",
+    "把当前会话整理成交接提示词，准备开新对话继续"
+  ]
+}

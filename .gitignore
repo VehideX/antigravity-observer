@@ -1,0 +1,11 @@
+node_modules/
+*.log
+.DS_Store
+Thumbs.db
+hud_prefs.json
+runtime_server.json
+server_info.json
+*.bak
+*.neko-staged
+*.prev.*
+.neko-hud-build-*/
