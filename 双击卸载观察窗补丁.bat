@@ -2,10 +2,10 @@
 chcp 65001 >nul
 cd /d "%~dp0"
 echo ======================================================
-echo   Gemini 猫猫观察台 (Neko Cockpit) 一键安全卸载程序
+echo   反重力观察窗 (Antigravity Observer) 一键安全卸载程序
 echo ======================================================
 echo.
-echo 正在安全移除猫猫补丁与 Sidecar 插件（保留原有中文汉化补丁）...
+echo 正在安全移除观察窗补丁与 Sidecar 插件（保留原有中文汉化补丁）...
 node setup.cjs --uninstall --kill --relaunch
 if errorlevel 1 (
   echo.

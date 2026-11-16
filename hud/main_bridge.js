@@ -13,22 +13,10 @@
     const https = require('https');
 
     const PLUGIN_DIR = path.join(os.homedir(), '.gemini', 'config', 'plugins', 'gemini-neko-cockpit');
-    const PREFS_PATH = path.join(PLUGIN_DIR, 'hud_prefs.json');
     const RUNTIME_PTR_PATH = path.join(PLUGIN_DIR, 'runtime_server.json');
     const DAEMON_DIR = path.join(os.homedir(), '.gemini', 'antigravity', 'daemon');
     const BRAIN_DIR = path.join(os.homedir(), '.gemini', 'antigravity', 'brain');
     const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
-    const DEFAULT_PREFS = {
-      corner: 'bottom-right',
-      size: 96,
-      opacity: 1,
-      showStats: true,
-      showBubble: true,
-      patCount: 0,
-      customPos: null,
-      bubbleIndex: 0
-    };
 
     function readJsonSafe(filePath) {
       try {
@@ -36,34 +24,6 @@
         return JSON.parse(fs.readFileSync(filePath, 'utf8'));
       } catch {
         return null;
-      }
-    }
-
-    function loadPrefs() {
-      const saved = readJsonSafe(PREFS_PATH);
-      if (!saved || typeof saved !== 'object') return { ...DEFAULT_PREFS };
-      return { ...DEFAULT_PREFS, ...saved };
-    }
-
-    function savePrefs(patch) {
-      const next = { ...loadPrefs(), ...(patch && typeof patch === 'object' ? patch : {}) };
-      try {
-        fs.mkdirSync(PLUGIN_DIR, { recursive: true });
-        const tmp = `${PREFS_PATH}.tmp.${process.pid}.${Date.now()}`;
-        fs.writeFileSync(tmp, JSON.stringify(next, null, 2), 'utf8');
-        fs.renameSync(tmp, PREFS_PATH);
-      } catch {}
-      return next;
-    }
-
-    function readAssetDataUrl(filename, mime) {
-      try {
-        const p = path.join(PLUGIN_DIR, 'assets', filename);
-        if (!fs.existsSync(p)) return '';
-        const b64 = fs.readFileSync(p).toString('base64');
-        return `data:${mime};base64,${b64}`;
-      } catch {
-        return '';
       }
     }
 
@@ -438,15 +398,9 @@
 
     ipcMain.handle('neko-hud:get-boot', async () => {
       return {
-        prefs: loadPrefs(),
-        nekoStripDataUrl: readAssetDataUrl('neko_strip.webp', 'image/webp') || readAssetDataUrl('neko_strip.png', 'image/png'),
-        logoDataUrl: readAssetDataUrl('logo.png', 'image/png'),
+        ok: true,
         sidecarInfo: findSidecarServerInfo()
       };
-    });
-
-    ipcMain.handle('neko-hud:save-prefs', async (_event, patch) => {
-      return savePrefs(patch);
     });
 
     ipcMain.handle('neko-hud:get-state', async (_event, convId, forceRefresh) => {

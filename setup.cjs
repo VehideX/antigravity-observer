@@ -121,10 +121,14 @@ function installSidecarPlugin() {
     fs.copyFileSync(path.join(REPO_ROOT, 'README.md'), path.join(PLUGIN_DEST_DIR, 'README.md'));
   }
 
-  for (const f of ['logo.png', 'neko_strip.webp', 'neko_strip.png']) {
+  for (const f of ['logo.png']) {
     const src = path.join(REPO_ROOT, 'assets', f);
     if (fs.existsSync(src)) fs.copyFileSync(src, path.join(ASSETS_DEST_DIR, f));
   }
+  for (const oldFile of ['neko_strip.webp', 'neko_strip.png']) {
+    try { fs.rmSync(path.join(ASSETS_DEST_DIR, oldFile), { force: true }); } catch {}
+  }
+  try { fs.rmSync(path.join(PLUGIN_DEST_DIR, 'hud_prefs.json'), { force: true }); } catch {}
 
   fs.copyFileSync(
     path.join(REPO_ROOT, 'skills', PLUGIN_ID, 'SKILL.md'),
@@ -281,9 +285,7 @@ function checkStatus(resourcesDir) {
     fs.existsSync(path.join(SIDECAR_DEST_DIR, 'sidecar.json')) &&
     fs.existsSync(path.join(SIDECAR_DEST_DIR, 'server.cjs')) &&
     fs.existsSync(path.join(SIDECAR_DEST_DIR, 'ui.html'));
-  const assetsOk =
-    fs.existsSync(path.join(ASSETS_DEST_DIR, 'logo.png')) &&
-    fs.existsSync(path.join(ASSETS_DEST_DIR, 'neko_strip.webp'));
+  const assetsOk = fs.existsSync(path.join(ASSETS_DEST_DIR, 'logo.png'));
   const skillOk = fs.existsSync(path.join(SKILL_DEST_DIR, 'SKILL.md'));
   const asarStatus = checkAsarStatus(resourcesDir);
 
@@ -311,23 +313,23 @@ async function runDoctor(args, resourcesDir) {
   const contracts = [
     {
       id: 'neko_plugin_files',
-      title: 'Gemini Neko Plugin & Assets Sync',
+      title: 'Antigravity Observer Plugin & Sidecar Sync',
       status:
         fs.existsSync(path.join(PLUGIN_DEST_DIR, 'plugin.json')) &&
         fs.existsSync(path.join(SIDECAR_DEST_DIR, 'server.cjs')) &&
-        fs.existsSync(path.join(ASSETS_DEST_DIR, 'neko_strip.webp'))
+        fs.existsSync(path.join(ASSETS_DEST_DIR, 'logo.png'))
           ? 'pass'
           : 'fail',
       detail: `Plugin dir: ${PLUGIN_DEST_DIR}`
     },
     {
       id: 'neko_window_hud_patch',
-      title: 'In-Window Catgirl & Input Stats Bar ASAR Bridge',
+      title: 'In-Window Context Observer & Input Stats Bar ASAR Bridge',
       status: asarStatus.hudMainPatched && asarStatus.hudPreloadPatched ? 'pass' : (asarStatus.stagedReady ? 'warn' : 'fail'),
       detail: asarStatus.hudMainPatched && asarStatus.hudPreloadPatched
         ? `Patched inside app.asar (AG_ZH intact: ${asarStatus.zhLocalizationIntact})`
         : (asarStatus.stagedReady
-            ? 'Candidate ASAR staged; run 双击安装窗口猫猫补丁.bat while Antigravity is closed to apply.'
+            ? 'Candidate ASAR staged; run 双击安装观察窗补丁.bat while Antigravity is closed to apply.'
             : 'ASAR bridge not installed yet.')
     },
     ...(diag.contracts || [])
@@ -399,19 +401,19 @@ async function main() {
   // Default install:
   const sidecarRes = installSidecarPlugin();
   console.log('[gemini-neko-cockpit] Sidecar plugin installed:', sidecarRes.pluginDir);
-  console.log('  Sidecar pill: [Gemini 猫猫观察台](sidecar://gemini-neko-cockpit/neko-cockpit/ui.html)');
+  console.log('  Sidecar pill: [反重力观察窗](sidecar://gemini-neko-cockpit/neko-cockpit/ui.html)');
 
   if (resourcesDir && !args.includes('--sidecar-only')) {
     const built = buildPatchedAsar(resourcesDir, false);
     if (built.ok) {
       const swap = trySwapStagedAsar(built.asarPath, built.stagedPath, args.includes('--kill'));
       if (swap.applied) {
-        console.log('[gemini-neko-cockpit] Window HUD & Gemini Neko ASAR bridge applied!');
+        console.log('[gemini-neko-cockpit] Window HUD & Context Observer ASAR bridge applied!');
         if (args.includes('--relaunch')) relaunchAntigravityWindows(resourcesDir);
       } else {
         console.log('[gemini-neko-cockpit] Antigravity is running; ASAR bridge validated & staged at:');
         console.log('  ', built.stagedPath);
-        console.log('  Close Antigravity and run `双击安装窗口猫猫补丁.bat` (or `node setup.cjs --apply-staged --kill --relaunch`) to activate in-window corner catgirl & input stats bar.');
+        console.log('  Close Antigravity and run `双击安装观察窗补丁.bat` (or `node setup.cjs --apply-staged --kill --relaunch`) to activate the in-window observer bar.');
       }
     }
   }

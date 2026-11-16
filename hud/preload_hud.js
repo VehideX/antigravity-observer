@@ -9,16 +9,11 @@
     const IDS = {
       style: 'gemini-neko-hud-style',
       stats: 'gemini-neko-stats-bar',
-      petRoot: 'gemini-neko-pet-root',
       modal: 'gemini-neko-observer-modal'
     };
 
-    const PAT_CURSOR_SVG = encodeURIComponent(
-      `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28"><path d="M12.5 4.2c-.9 0-1.6.7-1.6 1.6v6.7l-.9-.9c-.7-.7-1.8-.7-2.4 0-.7.7-.6 1.8.1 2.4l4.1 4.2c1.1 1.1 2.5 1.8 4.1 1.8h2.6c2.7 0 4.9-2.2 4.9-4.9V9.8c0-.8-.7-1.5-1.5-1.5s-1.5.7-1.5 1.5v1.6h-.5V7.1c0-.8-.7-1.5-1.5-1.5s-1.5.7-1.5 1.5v3.6h-.5V5.8c0-.9-.7-1.6-1.6-1.6s-1.6.7-1.6 1.6v4.9h-.5V5.8c0-.9-.7-1.6-1.6-1.6z" fill="#fff" stroke="#3b2d5e" stroke-width="1.5" stroke-linejoin="round"/></svg>`
-    );
-
     const CSS = `
-/* Gemini Neko Cockpit In-Window HUD */
+/* Antigravity Observer In-Window HUD */
 #${IDS.stats} {
   display: flex;
   align-items: center;
@@ -72,357 +67,6 @@
   font-weight: 600;
 }
 
-/* Corner Gemini Neko Widget */
-#${IDS.petRoot} {
-  position: fixed;
-  z-index: 2147482800;
-  user-select: none;
-  -webkit-user-drag: none;
-  -webkit-app-region: no-drag;
-  pointer-events: none;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
-}
-#${IDS.petRoot} * {
-  box-sizing: border-box;
-  -webkit-app-region: no-drag;
-}
-#${IDS.petRoot} .gn-stage {
-  position: relative;
-  pointer-events: auto;
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-}
-#${IDS.petRoot} .gn-avatar-btn {
-  position: relative;
-  width: var(--gn-size, 96px);
-  height: var(--gn-size, 96px);
-  padding: 0;
-  border: 0;
-  background: transparent;
-  cursor: url("data:image/svg+xml,${PAT_CURSOR_SVG}") 14 10, pointer;
-  outline: none;
-  transform-origin: 50% 92%;
-  transition: transform 0.36s cubic-bezier(0.34, 1.56, 0.64, 1);
-  filter: drop-shadow(0 6px 14px rgba(18, 16, 40, 0.28));
-}
-#${IDS.petRoot}[data-corner^="top"] .gn-avatar-btn {
-  transform-origin: 50% 15%;
-}
-#${IDS.petRoot} .gn-avatar-btn:hover {
-  transform: translateY(-2px) scale(1.03);
-}
-#${IDS.petRoot} .gn-avatar-btn.is-pressed {
-  transform: scale(1.11, 0.84) translateY(7px) !important;
-  transition: transform 0.08s ease-out !important;
-}
-#${IDS.petRoot} .gn-sprite {
-  width: 100%;
-  height: 100%;
-  background-repeat: no-repeat;
-  background-size: 400% 100%;
-  background-position: 0% 0%;
-  pointer-events: none;
-  animation: gnNekoFloat 4.4s ease-in-out infinite;
-}
-#${IDS.petRoot}[data-pose="thinking"] .gn-sprite {
-  background-position: 33.3333% 0%;
-  animation: gnNekoThink 2.4s ease-in-out infinite;
-}
-#${IDS.petRoot}[data-pose="working"] .gn-sprite {
-  background-position: 66.6666% 0%;
-  animation: gnNekoWork 1.4s ease-in-out infinite;
-}
-#${IDS.petRoot}[data-pose="pat"] .gn-sprite {
-  background-position: 100% 0%;
-  animation: gnNekoPurr 0.45s ease-in-out infinite;
-}
-@keyframes gnNekoFloat {
-  0%, 100% { transform: translateY(0px) rotate(0deg); }
-  50% { transform: translateY(-3px) rotate(-0.6deg); }
-}
-@keyframes gnNekoThink {
-  0%, 100% { transform: translateY(0px) rotate(-1deg); }
-  50% { transform: translateY(-3px) rotate(2deg); }
-}
-@keyframes gnNekoWork {
-  0%, 100% { transform: translateY(0px) scale(1); }
-  50% { transform: translateY(-4px) scale(1.02); }
-}
-@keyframes gnNekoPurr {
-  0%, 100% { transform: translateY(0px) rotate(-1.5deg); }
-  50% { transform: translateY(-2px) rotate(1.5deg); }
-}
-
-/* Floating Heart / Sparkle Particles */
-.gn-particle {
-  position: fixed;
-  z-index: 2147482900;
-  pointer-events: none;
-  font-size: 14px;
-  font-weight: 700;
-  animation: gnParticleRise 0.95s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-}
-@keyframes gnParticleRise {
-  0% { opacity: 0; transform: translate(-50%, 0) scale(0.6); }
-  20% { opacity: 1; transform: translate(-50%, -10px) scale(1.1); }
-  100% { opacity: 0; transform: translate(-50%, -46px) scale(0.9); }
-}
-
-/* Mini Status Ring Badge on Avatar Corner */
-#${IDS.petRoot} .gn-mini-badge {
-  position: absolute;
-  bottom: 3px;
-  left: 1px;
-  padding: 0px 5px;
-  border-radius: 999px;
-  font-size: 9.5px;
-  font-weight: 700;
-  letter-spacing: 0.01em;
-  background: rgba(20, 22, 34, 0.84);
-  color: #e2e8f0;
-  border: 1px solid rgba(167, 139, 250, 0.45);
-  backdrop-filter: blur(8px);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
-  pointer-events: none;
-}
-
-/* Side Floating Pills (... and ≡) */
-#${IDS.petRoot} .gn-pills {
-  position: absolute;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  top: 24%;
-  left: -25px;
-  pointer-events: auto;
-  z-index: 2;
-}
-#${IDS.petRoot}[data-corner$="left"] .gn-pills {
-  left: auto;
-  right: -25px;
-}
-#${IDS.petRoot} .gn-pill-btn {
-  width: 22px;
-  height: 22px;
-  border-radius: 7px;
-  border: 1px solid color-mix(in srgb, var(--border, #ffffff28) 90%, rgba(167, 139, 250, 0.4));
-  background: color-mix(in srgb, var(--card, #ffffff) 92%, rgba(235, 232, 255, 0.9));
-  color: var(--foreground, #334155);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 11px;
-  font-weight: 700;
-  cursor: pointer;
-  box-shadow: 0 3px 10px rgba(15, 23, 42, 0.22);
-  transition: transform 0.14s ease, border-color 0.14s ease, background 0.14s ease;
-}
-#${IDS.petRoot} .gn-pill-btn:hover {
-  transform: scale(1.08);
-  border-color: #8b5cf6;
-}
-#${IDS.petRoot} .gn-pill-btn.is-active {
-  background: #7c3aed;
-  color: #fff;
-  border-color: #8b5cf6;
-}
-
-/* Thought Bubble (喵言喵语) */
-#${IDS.petRoot} .gn-bubble-wrap {
-  position: absolute;
-  bottom: calc(100% + 10px);
-  right: 2px;
-  width: 204px;
-  pointer-events: auto;
-  transition: opacity 0.22s ease, transform 0.22s ease;
-}
-#${IDS.petRoot}[data-corner$="left"] .gn-bubble-wrap {
-  right: auto;
-  left: 2px;
-}
-#${IDS.petRoot}[data-corner^="top"] .gn-bubble-wrap {
-  bottom: auto;
-  top: calc(100% + 10px);
-}
-#${IDS.petRoot} .gn-bubble-wrap.is-hidden {
-  opacity: 0;
-  pointer-events: none;
-  transform: translateY(6px) scale(0.96);
-}
-#${IDS.petRoot} .gn-bubble {
-  position: relative;
-  padding: 7px 11px 6px;
-  border-radius: 999px / 54px;
-  background: radial-gradient(circle at 50% 25%, rgba(255, 255, 255, 0.97), rgba(242, 238, 255, 0.95));
-  color: #5b21b6;
-  border: 1.5px solid rgba(167, 139, 250, 0.48);
-  box-shadow: 0 10px 26px rgba(30, 27, 75, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.9);
-  text-align: center;
-}
-#${IDS.petRoot} .gn-bubble-head {
-  font-size: 10.5px;
-  font-weight: 700;
-  color: #8b5cf6;
-  letter-spacing: 0.04em;
-  margin-bottom: 3px;
-}
-#${IDS.petRoot} .gn-bubble-close {
-  position: absolute;
-  right: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  border: 0;
-  background: transparent;
-  color: #94a3b8;
-  cursor: pointer;
-  font-size: 13px;
-  line-height: 1;
-  padding: 2px 4px;
-}
-#${IDS.petRoot} .gn-bubble-close:hover {
-  color: #475569;
-}
-#${IDS.petRoot} .gn-bubble-text {
-  font-size: 12px;
-  font-weight: 700;
-  line-height: 1.35;
-  color: #6d28d9;
-  padding: 0 10px;
-  word-break: break-word;
-  cursor: pointer;
-}
-#${IDS.petRoot} .gn-bubble-sub {
-  margin-top: 4px;
-  font-size: 10px;
-  color: #94a3b8;
-}
-#${IDS.petRoot} .gn-bubble-pager {
-  margin-top: 4px;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 10.5px;
-  color: #64748b;
-}
-#${IDS.petRoot} .gn-bubble-pager button {
-  width: 18px;
-  height: 18px;
-  border-radius: 5px;
-  border: 1px solid rgba(148, 163, 184, 0.35);
-  background: rgba(255, 255, 255, 0.85);
-  color: #475569;
-  cursor: pointer;
-  font-size: 11px;
-  line-height: 1;
-  padding: 0;
-}
-#${IDS.petRoot} .gn-bubble-pager button:hover {
-  border-color: #8b5cf6;
-  color: #6d28d9;
-}
-#${IDS.petRoot} .gn-thought-dots {
-  position: absolute;
-  right: 48px;
-  bottom: -11px;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 3px;
-  pointer-events: none;
-}
-#${IDS.petRoot}[data-corner$="left"] .gn-thought-dots {
-  right: auto;
-  left: 48px;
-  align-items: flex-start;
-}
-#${IDS.petRoot}[data-corner^="top"] .gn-thought-dots {
-  bottom: auto;
-  top: -11px;
-  flex-direction: column-reverse;
-}
-#${IDS.petRoot} .gn-thought-dot1 {
-  width: 10px;
-  height: 7px;
-  border-radius: 999px;
-  background: rgba(244, 240, 255, 0.95);
-  border: 1px solid rgba(167, 139, 250, 0.45);
-}
-#${IDS.petRoot} .gn-thought-dot2 {
-  width: 6px;
-  height: 5px;
-  border-radius: 999px;
-  margin-right: 6px;
-  background: rgba(244, 240, 255, 0.9);
-  border: 1px solid rgba(167, 139, 250, 0.45);
-}
-
-/* Status Card Popover (Quota + Usage + Context) & Quick Menu */
-#${IDS.petRoot} .gn-popover {
-  position: absolute;
-  bottom: calc(100% + 10px);
-  right: 0;
-  width: 288px;
-  max-height: 76vh;
-  overflow-y: auto;
-  padding: 10px 11px;
-  border-radius: 14px;
-  background: color-mix(in srgb, var(--card, #181a24) 96%, #141625);
-  color: var(--foreground, #eef2ff);
-  border: 1px solid rgba(167, 139, 250, 0.36);
-  box-shadow: 0 16px 42px rgba(0, 0, 0, 0.42);
-  backdrop-filter: blur(16px);
-  pointer-events: auto;
-  display: none;
-  z-index: 5;
-}
-#${IDS.petRoot}[data-corner$="left"] .gn-popover {
-  right: auto;
-  left: 0;
-}
-#${IDS.petRoot}[data-corner^="top"] .gn-popover {
-  bottom: auto;
-  top: calc(100% + 10px);
-}
-#${IDS.petRoot} .gn-popover.is-open {
-  display: block;
-}
-.gn-pop-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 10px;
-  padding-bottom: 7px;
-  border-bottom: 1px solid color-mix(in srgb, var(--border, #ffffff18) 80%, transparent);
-}
-.gn-pop-title {
-  font-size: 13px;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-.gn-plan-tag {
-  font-size: 10px;
-  font-weight: 700;
-  padding: 1px 6px;
-  border-radius: 999px;
-  background: rgba(139, 92, 246, 0.22);
-  color: #c4b5fd;
-  border: 1px solid rgba(139, 92, 246, 0.35);
-}
-.gn-sec {
-  margin-top: 9px;
-}
-.gn-sec-title {
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--muted-foreground, #94a3b8);
-  margin-bottom: 5px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
 .gn-bar-row {
   margin-bottom: 6px;
 }
@@ -443,17 +87,6 @@
   border-radius: 999px;
   transition: width 0.25s ease;
 }
-.gn-kv-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 6px;
-}
-.gn-kv {
-  padding: 6px 8px;
-  border-radius: 8px;
-  background: color-mix(in srgb, var(--foreground, #fff) 5%, transparent);
-  border: 1px solid color-mix(in srgb, var(--border, #ffffff14) 85%, transparent);
-}
 .gn-kv-k {
   font-size: 10px;
   color: var(--muted-foreground, #94a3b8);
@@ -463,59 +96,6 @@
   font-weight: 700;
   margin-top: 1px;
   font-variant-numeric: tabular-nums;
-}
-.gn-pop-actions {
-  display: flex;
-  gap: 6px;
-  margin-top: 10px;
-}
-.gn-btn {
-  flex: 1;
-  padding: 6px 8px;
-  border-radius: 8px;
-  border: 1px solid color-mix(in srgb, var(--border, #ffffff22) 90%, transparent);
-  background: color-mix(in srgb, var(--foreground, #fff) 8%, transparent);
-  color: var(--foreground, #f1f5f9);
-  font-size: 11.5px;
-  font-weight: 600;
-  cursor: pointer;
-  text-align: center;
-}
-.gn-btn:hover {
-  border-color: #8b5cf6;
-}
-.gn-btn-primary {
-  background: linear-gradient(135deg, #7c3aed, #2563eb);
-  color: #fff;
-  border-color: transparent;
-}
-.gn-menu-list {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-.gn-menu-item {
-  width: 100%;
-  text-align: left;
-  padding: 7px 9px;
-  border-radius: 8px;
-  border: 0;
-  background: transparent;
-  color: inherit;
-  font-size: 12px;
-  cursor: pointer;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-.gn-menu-item:hover {
-  background: rgba(139, 92, 246, 0.16);
-}
-.gn-chip-row {
-  display: flex;
-  gap: 4px;
-  flex-wrap: wrap;
-  padding: 4px 2px;
 }
 .gn-chip {
   padding: 3px 8px;
@@ -532,7 +112,7 @@
   border-color: #7c3aed;
 }
 
-/* Full Context Observation Modal (上下文观察窗口) */
+/* Full Context Observation Modal (反重力上下文观察窗口) */
 #${IDS.modal} {
   position: fixed;
   inset: 0;
@@ -766,22 +346,9 @@
 
     // ---- HUD State ----
     const hud = {
-      prefs: {
-        corner: 'bottom-right',
-        size: 96,
-        opacity: 1,
-        showStats: true,
-        showBubble: true,
-        patCount: 0,
-        customPos: null,
-        bubbleIndex: 0
-      },
-      nekoStripDataUrl: '',
       activeConvId: '__init__',
       refreshSeq: 0,
       state: null,
-      popoverMode: '', // '' | 'status' | 'menu'
-      pattingUntil: 0,
       modalOpen: false,
       modalConvId: '',
       modalBreakdown: null,
@@ -801,7 +368,6 @@
       hud.modalConvId = nextId;
       hud.modalBreakdown = null;
       updateStatsBar();
-      updatePetDisplay();
       if (hud.modalOpen) renderObserverModal();
       if (prevId !== '__init__') {
         refreshTelemetry(true);
@@ -809,66 +375,15 @@
       return true;
     }
 
-    function savePrefsPatch(patch) {
-      hud.prefs = { ...hud.prefs, ...patch };
-      applyPetGeometry();
-      updateStatsBar();
-      ipcRenderer.invoke('neko-hud:save-prefs', patch).catch(() => {});
-    }
-
-    function computePose() {
-      if (Date.now() < hud.pattingUntil) return 'pat';
-      const conv = hud.state && hud.state.conv;
-      const busyDom = detectDomBusy();
-      if (conv && conv.waitState) return 'thinking';
-      if (busyDom || (conv && conv.isThinking)) {
-        const steps = (conv && conv.steps) || 0;
-        return steps > 0 && (steps % 2 === 0) ? 'working' : 'thinking';
-      }
-      return 'idle';
-    }
-
-    function buildBubbleMessages() {
-      const conv = hud.state && hud.state.conv;
-      const quota = hud.state && hud.state.quota;
-      const groups = (quota && Array.isArray(quota.groups)) ? quota.groups : [];
-      const gemGrp = groups.find((g) => /gemini/i.test(g.label) && !/argon/i.test(g.label)) || groups[0];
-      const fiveH = gemGrp && gemGrp.buckets ? gemGrp.buckets.find((b) => b.windowKind === '5h') : null;
-      const weekly = gemGrp && gemGrp.buckets ? gemGrp.buckets.find((b) => b.windowKind === 'weekly') : null;
-
-      const qLine = fiveH
-        ? `Gemini 5h额度剩 ${fiveH.remainingPct}%${weekly ? ` · 周限 ${weekly.remainingPct}%` : ''} 喵，${fiveH.remainingPct < 25 ? '省着点用哦~' : '状态满满!'}`
-        : '正在同步模型额度数据喵~';
-
-      const ctxLine = conv
-        ? `本会话 ${conv.rounds || 0}轮 ${conv.steps || 0}步，缓存命中 ${conv.cacheHitPct !== null && conv.cacheHitPct !== undefined ? conv.cacheHitPct + '%' : '—'}，上下文 ${conv.contextPct !== null ? conv.contextPct + '%' : fmtTok(conv.contextTokens)} 喵~`
-        : '点下面「···」可以偷看额度和上下文哦~';
-
-      const spdLine = conv && conv.tokPerSec > 0
-        ? `输出速度 ${conv.tokPerSec} tok/s！已被摸摸 ${hud.prefs.patCount || 0} 次喵 ♥`
-        : `今天已经被摸摸 ${hud.prefs.patCount || 0} 次啦，好感度上升中 ♥`;
-
-      const idleLine = (conv && conv.isThinking)
-        ? '本喵正在帮你盯着推理进度呢，别急喵~'
-        : '哼，这么安静，是在憋大招？';
-
-      return [idleLine, qLine, ctxLine, spdLine];
-    }
-
     // ---- Component A: Input Stats Bar ----
     function mountStatsBarOnly() {
-      if (!hud.prefs.showStats) {
-        const old = document.getElementById(IDS.stats);
-        if (old) old.remove();
-        return false;
-      }
       const inputBox = findVisibleEl('[data-testid="agent-input-box"]') || document.querySelector('[data-testid="agent-input-box"]');
       if (!inputBox || !inputBox.parentElement) return false;
       let bar = document.getElementById(IDS.stats);
       if (!bar) {
         bar = document.createElement('div');
         bar.id = IDS.stats;
-        bar.title = '点击打开 Gemini 猫猫上下文观察窗口';
+        bar.title = '点击打开反重力上下文观察窗口';
         bar.addEventListener('click', (e) => {
           e.stopPropagation();
           openObserverModal();
@@ -963,377 +478,7 @@
       if (bar.innerHTML !== nextHtml) bar.innerHTML = nextHtml;
     }
 
-    // ---- Component B: Corner Pressable Gemini Catgirl ----
-    function spawnParticles(anchorEl) {
-      const rect = anchorEl.getBoundingClientRect();
-      const glyphs = ['♥', '✦', '喵~', '★'];
-      const colors = ['#f472b6', '#60a5fa', '#fbbf24', '#c084fc'];
-      for (let i = 0; i < 4; i++) {
-        const p = document.createElement('div');
-        p.className = 'gn-particle';
-        p.textContent = glyphs[i % glyphs.length];
-        p.style.color = colors[i % colors.length];
-        p.style.left = `${rect.left + rect.width * (0.28 + Math.random() * 0.44)}px`;
-        p.style.top = `${rect.top + rect.height * (0.12 + Math.random() * 0.25)}px`;
-        document.body.appendChild(p);
-        setTimeout(() => p.remove(), 980);
-      }
-    }
-
-    function applyPetGeometry() {
-      const root = document.getElementById(IDS.petRoot);
-      if (!root) return;
-      const corner = hud.prefs.corner || 'bottom-right';
-      root.setAttribute('data-corner', corner);
-      root.setAttribute('data-pose', computePose());
-      root.style.setProperty('--gn-size', `${hud.prefs.size || 96}px`);
-      root.style.opacity = String(hud.prefs.opacity ?? 1);
-
-      root.style.top = 'auto';
-      root.style.right = 'auto';
-      root.style.bottom = 'auto';
-      root.style.left = 'auto';
-
-      if (hud.prefs.customPos && typeof hud.prefs.customPos.x === 'number' && typeof hud.prefs.customPos.y === 'number') {
-        const size = hud.prefs.size || 96;
-        const maxX = Math.max(8, window.innerWidth - size - 8);
-        const maxY = Math.max(8, window.innerHeight - size - 8);
-        root.style.left = `${Math.min(maxX, Math.max(8, hud.prefs.customPos.x))}px`;
-        root.style.top = `${Math.min(maxY, Math.max(8, hud.prefs.customPos.y))}px`;
-      } else {
-        if (corner.includes('bottom')) root.style.bottom = '2px';
-        else root.style.top = '36px';
-        if (corner.includes('right')) root.style.right = '10px';
-        else root.style.left = '10px';
-      }
-    }
-
-    function renderPopover() {
-      const root = document.getElementById(IDS.petRoot);
-      if (!root) return;
-      const pop = root.querySelector('.gn-popover');
-      const statusBtn = root.querySelector('[data-gn-btn="status"]');
-      const menuBtn = root.querySelector('[data-gn-btn="menu"]');
-      if (!pop) return;
-
-      if (statusBtn) statusBtn.classList.toggle('is-active', hud.popoverMode === 'status');
-      if (menuBtn) menuBtn.classList.toggle('is-active', hud.popoverMode === 'menu');
-
-      if (!hud.popoverMode) {
-        pop.classList.remove('is-open');
-        return;
-      }
-      pop.classList.add('is-open');
-
-      if (hud.popoverMode === 'menu') {
-        const curCorner = hud.prefs.corner || 'bottom-right';
-        const curSize = hud.prefs.size || 96;
-        pop.innerHTML = `
-          <div class="gn-pop-head">
-            <span class="gn-pop-title">✦ 猫猫快捷控制</span>
-            <button type="button" class="gn-chip" data-gn-act="close-pop">×</button>
-          </div>
-          <div class="gn-menu-list">
-            <button type="button" class="gn-menu-item" data-gn-act="open-observer">
-              <span>🔍 打开上下文观察窗口</span><span>→</span>
-            </button>
-            <button type="button" class="gn-menu-item" data-gn-act="toggle-stats">
-              <span>📊 输入框下方轮步统计栏</span><span>${hud.prefs.showStats ? '已开启' : '已隐藏'}</span>
-            </button>
-            <button type="button" class="gn-menu-item" data-gn-act="toggle-bubble">
-              <span>💬 喵言喵语思考气泡</span><span>${hud.prefs.showBubble ? '已开启' : '已隐藏'}</span>
-            </button>
-          </div>
-          <div class="gn-sec">
-            <div class="gn-sec-title"><span>📍 停靠窗口角落</span></div>
-            <div class="gn-chip-row">
-              ${[
-                ['bottom-right', '右下角'],
-                ['bottom-left', '左下角'],
-                ['top-right', '右上角'],
-                ['top-left', '左上角']
-              ].map(([k, lbl]) => `<button type="button" class="gn-chip ${curCorner === k && !hud.prefs.customPos ? 'is-active' : ''}" data-gn-corner="${k}">${lbl}</button>`).join('')}
-            </div>
-          </div>
-          <div class="gn-sec">
-            <div class="gn-sec-title"><span>📏 猫猫大小</span></div>
-            <div class="gn-chip-row">
-              ${[[72, '小'], [96, '中'], [124, '大']].map(([sz, lbl]) => `<button type="button" class="gn-chip ${curSize === sz ? 'is-active' : ''}" data-gn-size="${sz}">${lbl} (${sz}px)</button>`).join('')}
-            </div>
-          </div>
-        `;
-        return;
-      }
-
-      // Status popover: Quotas + Usage + Context
-      const conv = hud.state && hud.state.conv;
-      const quota = hud.state && hud.state.quota;
-      const plan = (hud.state && hud.state.plan && hud.state.plan.planName) || '';
-      const groups = (quota && Array.isArray(quota.groups)) ? quota.groups : [];
-
-      let quotaHtml = '<div style="font-size:11px;opacity:.65;">正在获取额度数据…</div>';
-      if (groups.length > 0) {
-        quotaHtml = groups.map((g) => {
-          const bucketsHtml = (g.buckets || []).map((b) => {
-            const rem = typeof b.remainingPct === 'number' ? b.remainingPct : 0;
-            const col = pctColor(rem, true);
-            const reset = fmtResetCountdown(b.resetAtIso || b.resetAtMs);
-            return `
-              <div class="gn-bar-row">
-                <div class="gn-bar-meta">
-                  <span>${esc(g.label.replace(' models', '').replace(' Models', ''))} · ${esc(b.windowLabel)}</span>
-                  <span class="gn-mono" style="color:${col};font-weight:700;">剩 ${rem}%</span>
-                </div>
-                <div class="gn-bar-track"><div class="gn-bar-fill" style="width:${Math.max(2, rem)}%;background:${col};"></div></div>
-                ${reset ? `<div style="font-size:9.5px;opacity:.6;text-align:right;margin-top:1px;">${esc(reset)}</div>` : ''}
-              </div>`;
-          }).join('');
-          return bucketsHtml;
-        }).join('');
-      }
-
-      const ctxPct = conv && conv.contextPct !== null && conv.contextPct !== undefined ? conv.contextPct : 0;
-      const ctxCol = pctColor(ctxPct, false);
-
-      const statusHtml = `
-        <div class="gn-pop-head">
-          <span class="gn-pop-title">✦ Gemini 猫猫状态卡 ${plan ? `<span class="gn-plan-tag">${esc(plan)}</span>` : ''}</span>
-          <button type="button" class="gn-chip" data-gn-act="close-pop">×</button>
-        </div>
-
-        <div class="gn-sec">
-          <div class="gn-sec-title"><span>⚡ 模型额度与重置</span><span class="gn-mono" style="font-weight:500;">${esc((conv && conv.modelLabel) || '')}</span></div>
-          ${quotaHtml}
-        </div>
-
-        <div class="gn-sec">
-          <div class="gn-sec-title"><span>📊 本会话使用情况</span><span>摸摸 ${hud.prefs.patCount || 0} 次 ♥</span></div>
-          ${conv ? `
-            <div class="gn-kv-grid">
-              <div class="gn-kv"><div class="gn-kv-k">轮次 / 步数</div><div class="gn-kv-v">${conv.rounds} 轮 ${conv.steps} 步</div></div>
-              <div class="gn-kv"><div class="gn-kv-k">生成速率 / TTFT</div><div class="gn-kv-v">${conv.tokPerSec ? conv.tokPerSec + ' tok/s' : '—'}${conv.ttftMs ? ' · ' + (conv.ttftMs / 1000).toFixed(1) + 's' : ''}</div></div>
-              <div class="gn-kv"><div class="gn-kv-k">总消耗 / 缓存命中</div><div class="gn-kv-v">${fmtTok(conv.totalTokens)} · ${conv.cacheHitPct !== null && conv.cacheHitPct !== undefined ? conv.cacheHitPct + '%' : '—'}</div></div>
-              <div class="gn-kv"><div class="gn-kv-k">新输入 / 缓存 / 输出</div><div class="gn-kv-v">${fmtTok(conv.inputTokens)} / ${fmtTok(conv.cacheReadTokens)} / ${fmtTok(conv.outputTokens)}</div></div>
-            </div>
-          ` : '<div style="font-size:11px;opacity:.65;">暂无活跃会话</div>'}
-        </div>
-
-        <div class="gn-sec">
-          <div class="gn-sec-title">
-            <span>🧠 上下文窗口</span>
-            <span class="gn-mono" style="color:${ctxCol};">${conv ? `${fmtTok(conv.contextTokens)} / ${conv.contextMaxTokens ? fmtTok(conv.contextMaxTokens) : '?'} (${ctxPct}%)` : '—'}</span>
-          </div>
-          <div class="gn-bar-track" style="height:8px;">
-            <div class="gn-bar-fill" style="width:${Math.max(2, ctxPct)}%;background:${ctxCol};"></div>
-          </div>
-          ${conv && conv.tokenBreakdown && Array.isArray(conv.tokenBreakdown.groups) ? `
-            <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:5px;font-size:10px;opacity:.8;">
-              ${conv.tokenBreakdown.groups.map((g) => `<span>${esc(g.name)}: ${fmtTok(g.numTokens)}</span>`).join('<span>·</span>')}
-            </div>
-          ` : ''}
-        </div>
-
-        <div class="gn-pop-actions">
-          <button type="button" class="gn-btn gn-btn-primary" data-gn-act="open-observer">🔍 上下文观察窗口</button>
-          <button type="button" class="gn-btn" data-gn-act="refresh">🔄 刷新</button>
-        </div>
-      `;
-      if (pop.innerHTML !== statusHtml) {
-        const prevPopTop = pop.scrollTop || 0;
-        pop.innerHTML = statusHtml;
-        pop.scrollTop = prevPopTop;
-      }
-    }
-
-    function updatePetDisplay() {
-      const root = document.getElementById(IDS.petRoot);
-      if (!root) return;
-      root.setAttribute('data-pose', computePose());
-      const badge = root.querySelector('.gn-mini-badge');
-      const conv = hud.state && hud.state.conv;
-      if (badge) {
-        if (conv && conv.contextPct !== null && conv.contextPct !== undefined) {
-          badge.textContent = `${Math.round(conv.contextPct)}%`;
-          badge.style.display = 'block';
-        } else {
-          badge.style.display = 'none';
-        }
-      }
-      const bWrap = root.querySelector('.gn-bubble-wrap');
-      const bText = root.querySelector('.gn-bubble-text');
-      const bIdx = root.querySelector('.gn-bubble-idx');
-      if (bWrap && bText && bIdx) {
-        const shouldHide = !hud.prefs.showBubble || Boolean(hud.popoverMode);
-        bWrap.classList.toggle('is-hidden', shouldHide);
-        const lines = buildBubbleMessages();
-        const idx = ((hud.prefs.bubbleIndex || 0) % lines.length + lines.length) % lines.length;
-        bText.textContent = lines[idx];
-        bIdx.textContent = `${idx + 1}/${lines.length}`;
-      }
-      if (hud.popoverMode === 'status') {
-        renderPopover();
-      }
-    }
-
-    function mountPetWidget() {
-      if (document.getElementById(IDS.petRoot) || !document.body) return;
-      const root = document.createElement('div');
-      root.id = IDS.petRoot;
-      root.innerHTML = `
-        <div class="gn-stage">
-          <div class="gn-bubble-wrap">
-            <div class="gn-bubble">
-              <div class="gn-bubble-head">✦ 喵言喵语 ✦ <button type="button" class="gn-bubble-close" data-gn-act="hide-bubble" title="隐藏气泡">×</button></div>
-              <div class="gn-bubble-text" data-gn-act="next-line"></div>
-              <div class="gn-bubble-sub">点点本喵，再聊一句</div>
-              <div class="gn-bubble-pager">
-                <button type="button" data-gn-act="prev-line">‹</button>
-                <span class="gn-bubble-idx">1/4</span>
-                <button type="button" data-gn-act="next-line">›</button>
-              </div>
-              <div class="gn-thought-dots">
-                <span class="gn-thought-dot1"></span>
-                <span class="gn-thought-dot2"></span>
-              </div>
-            </div>
-          </div>
-
-          <div class="gn-pills">
-            <button type="button" class="gn-pill-btn" data-gn-btn="status" title="查看模型额度、用量与上下文">···</button>
-            <button type="button" class="gn-pill-btn" data-gn-btn="menu" title="猫猫设置与上下文观察窗口">≡</button>
-          </div>
-
-          <button type="button" class="gn-avatar-btn" title="按一按摸摸 Gemini 猫猫 (可拖拽移动位置)">
-            <div class="gn-sprite"></div>
-            <span class="gn-mini-badge" style="display:none;"></span>
-          </button>
-
-          <div class="gn-popover"></div>
-        </div>
-      `;
-
-      const spriteEl = root.querySelector('.gn-sprite');
-      if (spriteEl && hud.nekoStripDataUrl) {
-        spriteEl.style.backgroundImage = `url("${hud.nekoStripDataUrl}")`;
-      }
-
-      const avatarBtn = root.querySelector('.gn-avatar-btn');
-      let dragState = null;
-
-      avatarBtn.addEventListener('pointerdown', (e) => {
-        if (e.button !== 0) return;
-        e.preventDefault();
-        avatarBtn.setPointerCapture(e.pointerId);
-        avatarBtn.classList.add('is-pressed');
-        const rect = root.getBoundingClientRect();
-        dragState = {
-          pointerId: e.pointerId,
-          startX: e.clientX,
-          startY: e.clientY,
-          origX: rect.left,
-          origY: rect.top,
-          moved: false
-        };
-      });
-
-      avatarBtn.addEventListener('pointermove', (e) => {
-        if (!dragState || dragState.pointerId !== e.pointerId) return;
-        const dx = e.clientX - dragState.startX;
-        const dy = e.clientY - dragState.startY;
-        if (!dragState.moved && (Math.abs(dx) > 6 || Math.abs(dy) > 6)) {
-          dragState.moved = true;
-          avatarBtn.classList.remove('is-pressed');
-        }
-        if (dragState.moved) {
-          hud.prefs.customPos = { x: dragState.origX + dx, y: dragState.origY + dy };
-          applyPetGeometry();
-        }
-      });
-
-      const endPress = (e) => {
-        if (!dragState || dragState.pointerId !== e.pointerId) return;
-        const wasMoved = dragState.moved;
-        dragState = null;
-        avatarBtn.classList.remove('is-pressed');
-        try { avatarBtn.releasePointerCapture(e.pointerId); } catch {}
-        if (wasMoved) {
-          savePrefsPatch({ customPos: hud.prefs.customPos });
-        } else {
-          // Head-pat / press!
-          hud.pattingUntil = Date.now() + 1800;
-          spawnParticles(avatarBtn);
-          const nextPat = (hud.prefs.patCount || 0) + 1;
-          const nextIdx = ((hud.prefs.bubbleIndex || 0) + 1) % 4;
-          savePrefsPatch({ patCount: nextPat, bubbleIndex: nextIdx, showBubble: true });
-          updatePetDisplay();
-          setTimeout(updatePetDisplay, 1850);
-        }
-      };
-      avatarBtn.addEventListener('pointerup', endPress);
-      avatarBtn.addEventListener('pointercancel', endPress);
-
-      root.addEventListener('click', (e) => {
-        const btn = e.target.closest('[data-gn-btn], [data-gn-act], [data-gn-corner], [data-gn-size]');
-        if (!btn) return;
-        e.stopPropagation();
-        const btnKind = btn.getAttribute('data-gn-btn');
-        if (btnKind) {
-          hud.popoverMode = hud.popoverMode === btnKind ? '' : btnKind;
-          renderPopover();
-          updatePetDisplay();
-          if (hud.popoverMode === 'status') refreshTelemetry(true);
-          return;
-        }
-        const corner = btn.getAttribute('data-gn-corner');
-        if (corner) {
-          savePrefsPatch({ corner, customPos: null });
-          renderPopover();
-          return;
-        }
-        const sz = btn.getAttribute('data-gn-size');
-        if (sz) {
-          savePrefsPatch({ size: parseInt(sz, 10) || 96 });
-          renderPopover();
-          return;
-        }
-        const act = btn.getAttribute('data-gn-act');
-        if (act === 'close-pop') {
-          hud.popoverMode = '';
-          renderPopover();
-          updatePetDisplay();
-        } else if (act === 'hide-bubble') {
-          savePrefsPatch({ showBubble: false });
-          updatePetDisplay();
-        } else if (act === 'next-line') {
-          savePrefsPatch({ bubbleIndex: (hud.prefs.bubbleIndex || 0) + 1 });
-          updatePetDisplay();
-        } else if (act === 'prev-line') {
-          savePrefsPatch({ bubbleIndex: (hud.prefs.bubbleIndex || 0) - 1 });
-          updatePetDisplay();
-        } else if (act === 'toggle-stats') {
-          savePrefsPatch({ showStats: !hud.prefs.showStats });
-          ensureStatsBar();
-          renderPopover();
-        } else if (act === 'toggle-bubble') {
-          savePrefsPatch({ showBubble: !hud.prefs.showBubble });
-          updatePetDisplay();
-          renderPopover();
-        } else if (act === 'open-observer') {
-          hud.popoverMode = '';
-          renderPopover();
-          updatePetDisplay();
-          openObserverModal();
-        } else if (act === 'refresh') {
-          refreshTelemetry(true);
-        }
-      });
-
-      document.body.appendChild(root);
-      applyPetGeometry();
-      updatePetDisplay();
-    }
-
-    // ---- Component C: In-Window Context Observer Modal ----
+    // ---- Component B: In-Window Context Observer Modal ----
     function ensureObserverModal() {
       let modal = document.getElementById(IDS.modal);
       if (modal || !document.body) return modal;
@@ -1343,7 +488,7 @@
         <div class="gn-modal-card">
           <div class="gn-modal-head">
             <div style="display:flex;align-items:center;gap:10px;min-width:0;flex:1;">
-              <span style="font-size:15px;font-weight:800;white-space:nowrap;">✦ Gemini 猫猫上下文观察窗口</span>
+              <span style="font-size:15px;font-weight:800;white-space:nowrap;">✦ 反重力上下文观察窗口</span>
               <select id="gn-conv-select" style="max-width:300px;padding:4px 8px;border-radius:8px;border:1px solid rgba(148,163,184,.35);background:transparent;color:inherit;font-size:12px;"></select>
             </div>
             <button type="button" class="gn-chip" data-gn-close-modal="1" style="font-size:14px;padding:4px 10px;">关闭 ×</button>
@@ -1572,7 +717,7 @@
         ` : ''}
 
         <div style="font-size:11px;opacity:.68;display:flex;justify-content:space-between;align-items:center;">
-          <span>提示：也可在右上角扩展 / Sidecar 面板打开完整「Gemini 猫猫观察台」侧栏。</span>
+          <span>提示：也可在右上角扩展 / Sidecar 面板打开完整「反重力观察窗」侧栏（按 Esc 关闭本窗口）。</span>
           <span class="gn-mono">总输入 ${fmtTok((bd && bd.totalInputTokens) ?? (modalConv && modalConv.inputTokens) ?? 0)} · 缓存 ${fmtTok((bd && bd.totalCacheReadTokens) ?? (modalConv && modalConv.cacheReadTokens) ?? 0)} · 输出 ${fmtTok((bd && bd.totalOutputTokens) ?? (modalConv && modalConv.outputTokens) ?? 0)}</span>
         </div>
       `;
@@ -1608,7 +753,6 @@
           }
           hud.state = data;
           ensureStatsBar();
-          updatePetDisplay();
           if (hud.modalOpen) renderObserverModal();
         }
       } catch {} finally {
@@ -1617,18 +761,13 @@
     }
 
     async function bootHud() {
-      try {
-        const boot = await ipcRenderer.invoke('neko-hud:get-boot');
-        if (boot && boot.prefs) hud.prefs = { ...hud.prefs, ...boot.prefs };
-        if (boot && boot.nekoStripDataUrl) hud.nekoStripDataUrl = boot.nekoStripDataUrl;
-      } catch {}
-
       const startDom = () => {
         if (!document.body) return;
+        const legacyPet = document.getElementById('gemini-neko-pet-root');
+        if (legacyPet) legacyPet.remove();
         syncActiveConversation();
         injectStyles();
         ensureStatsBar();
-        mountPetWidget();
         refreshTelemetry(true);
 
         let rafScheduled = false;
@@ -1639,12 +778,6 @@
             rafScheduled = false;
             syncActiveConversation();
             if (mountStatsBarOnly()) updateStatsBar();
-            if (!document.getElementById(IDS.petRoot)) mountPetWidget();
-            const root = document.getElementById(IDS.petRoot);
-            const nextPose = computePose();
-            if (root && root.getAttribute('data-pose') !== nextPose) {
-              root.setAttribute('data-pose', nextPose);
-            }
           });
         });
         obs.observe(document.body, {
@@ -1663,16 +796,9 @@
 
         window.addEventListener('popstate', scheduleNavSync);
         window.addEventListener('hashchange', scheduleNavSync);
-        window.addEventListener('resize', applyPetGeometry);
         document.addEventListener('click', (e) => {
-          const root = document.getElementById(IDS.petRoot);
           const modalEl = document.getElementById(IDS.modal);
-          if (hud.popoverMode && root && !root.contains(e.target)) {
-            hud.popoverMode = '';
-            renderPopover();
-            updatePetDisplay();
-          }
-          if ((root && root.contains(e.target)) || (modalEl && modalEl.contains(e.target))) {
+          if (modalEl && modalEl.contains(e.target)) {
             return;
           }
           if (e.target && typeof e.target.closest === 'function') {
@@ -1682,6 +808,10 @@
           }
         }, true);
         document.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape' && hud.modalOpen) {
+            closeObserverModal();
+            return;
+          }
           if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'O' || e.key === 'o')) {
             scheduleNavSync();
           }
