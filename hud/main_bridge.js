@@ -13,10 +13,74 @@
     const https = require('https');
 
     const PLUGIN_DIR = path.join(os.homedir(), '.gemini', 'config', 'plugins', 'gemini-neko-cockpit');
+    const PREFS_PATH = path.join(PLUGIN_DIR, 'hud_prefs.json');
+    const CUSTOM_ASSETS_DIR = path.join(PLUGIN_DIR, 'assets', 'custom');
     const RUNTIME_PTR_PATH = path.join(PLUGIN_DIR, 'runtime_server.json');
     const DAEMON_DIR = path.join(os.homedir(), '.gemini', 'antigravity', 'daemon');
     const BRAIN_DIR = path.join(os.homedir(), '.gemini', 'antigravity', 'brain');
     const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    const FRAME_KEYS = ['idle', 'eat', 'grin', 'xd'];
+
+    const DEFAULT_ANCHOR = {
+      v: 2,
+      hAnchor: 'right',
+      hDist: 0,
+      vAnchor: 'bottom',
+      vDist: 0
+    };
+
+    const DEFAULT_PREFS = {
+      prefsVersion: 2,
+      enabled: true,
+      showStatsBar: true,
+      size: 112,
+      bubbleScale: 1,
+      opacity: 1,
+      soundEnabled: true,
+      soundSet: 'boing',
+      volume: 0.78,
+      customAudioPath: '',
+      completionEasterEgg: true,
+      completionSound: false,
+      turnCostBubble: true,
+      anchor: { ...DEFAULT_ANCHOR },
+      patCount: 0,
+      customDialogues: [],
+      customFrames: {
+        idle: '',
+        eat: '',
+        grin: '',
+        xd: ''
+      }
+    };
+
+    const SOUND_FILES = [
+      'boing_press',
+      'boing_release',
+      'nya_press',
+      'nya_release',
+      'duck_press',
+      'duck_release',
+      'combo_chime'
+    ];
+
+    const AUDIO_MIME_MAP = {
+      '.wav': 'audio/wav',
+      '.mp3': 'audio/mpeg',
+      '.ogg': 'audio/ogg',
+      '.m4a': 'audio/mp4',
+      '.aac': 'audio/aac',
+      '.flac': 'audio/flac',
+      '.webm': 'audio/webm'
+    };
+
+    const IMAGE_MIME_MAP = {
+      '.png': 'image/png',
+      '.webp': 'image/webp',
+      '.jpg': 'image/jpeg',
+      '.jpeg': 'image/jpeg',
+      '.gif': 'image/gif'
+    };
 
     function readJsonSafe(filePath) {
       try {
@@ -25,6 +89,165 @@
       } catch {
         return null;
       }
+    }
+
+    function normalizeAnchor(raw, prefsVersion) {
+      if (!raw || typeof raw !== 'object') return { ...DEFAULT_ANCHOR };
+      const hAnchor = raw.hAnchor === 'left' ? 'left' : 'right';
+      const vAnchor = raw.vAnchor === 'top' ? 'top' : 'bottom';
+      let hDist = Number.isFinite(Number(raw.hDist)) ? Math.max(0, Math.min(4000, Math.round(Number(raw.hDist)))) : DEFAULT_ANCHOR.hDist;
+      let vDist = Number.isFinite(Number(raw.vDist)) ? Math.max(0, Math.min(4000, Math.round(Number(raw.vDist)))) : DEFAULT_ANCHOR.vDist;
+      // Migrate old v1 default/snapped margin (e.g. 14/16, 26) to flush bottom-right (0, 0)
+      if ((!prefsVersion || Number(prefsVersion) < 2) && hAnchor === 'right' && vAnchor === 'bottom' && hDist <= 24 && vDist <= 32) {
+        hDist = 0;
+        vDist = 0;
+      }
+      return { v: 2, hAnchor, hDist, vAnchor, vDist };
+    }
+
+    function normalizeCustomDialogues(raw) {
+      if (!Array.isArray(raw)) return [];
+      const seen = new Set();
+      const out = [];
+      for (const item of raw) {
+        const txt = String(item ?? '').trim().slice(0, 120);
+        if (!txt || seen.has(txt)) continue;
+        seen.add(txt);
+        out.push(txt);
+        if (out.length >= 60) break;
+      }
+      return out;
+    }
+
+    function normalizeCustomFrames(raw) {
+      const out = { idle: '', eat: '', grin: '', xd: '' };
+      if (!raw || typeof raw !== 'object') return out;
+      for (const k of FRAME_KEYS) {
+        out[k] = typeof raw[k] === 'string' ? raw[k].trim() : '';
+      }
+      return out;
+    }
+
+    function normalizePrefs(raw) {
+      const rawVer = raw && typeof raw === 'object' ? raw.prefsVersion : 2;
+      const merged = { ...DEFAULT_PREFS, ...(raw && typeof raw === 'object' ? raw : {}) };
+      merged.prefsVersion = 2;
+      merged.enabled = merged.enabled !== false;
+      merged.showStatsBar = merged.showStatsBar !== false;
+      const sz = Number(merged.size);
+      merged.size = Number.isFinite(sz) ? Math.max(64, Math.min(200, Math.round(sz))) : DEFAULT_PREFS.size;
+      const bs = Number(merged.bubbleScale);
+      merged.bubbleScale = Number.isFinite(bs) ? Math.max(0.65, Math.min(1.6, Math.round(bs * 100) / 100)) : 1;
+      const op = Number(merged.opacity);
+      merged.opacity = Number.isFinite(op) ? Math.max(0.35, Math.min(1, Math.round(op * 100) / 100)) : 1;
+      merged.soundEnabled = merged.soundEnabled !== false;
+      merged.soundSet = ['boing', 'nya', 'duck', 'custom'].includes(merged.soundSet) ? merged.soundSet : 'boing';
+      const vol = Number(merged.volume);
+      merged.volume = Number.isFinite(vol) ? Math.max(0, Math.min(1, Math.round(vol * 100) / 100)) : DEFAULT_PREFS.volume;
+      merged.customAudioPath = typeof merged.customAudioPath === 'string' ? merged.customAudioPath.trim() : '';
+      merged.completionEasterEgg = merged.completionEasterEgg !== false;
+      merged.completionSound = Boolean(merged.completionSound);
+      merged.turnCostBubble = merged.turnCostBubble !== false;
+      merged.anchor = normalizeAnchor(merged.anchor, rawVer);
+      const pats = Number(merged.patCount);
+      merged.patCount = Number.isFinite(pats) && pats >= 0 ? Math.floor(pats) : 0;
+      merged.customDialogues = normalizeCustomDialogues(merged.customDialogues);
+      merged.customFrames = normalizeCustomFrames(merged.customFrames);
+      return merged;
+    }
+
+    function loadPrefs() {
+      const saved = readJsonSafe(PREFS_PATH);
+      const normalized = normalizePrefs(saved);
+      if (saved && (!saved.prefsVersion || Number(saved.prefsVersion) < 2)) {
+        try {
+          fs.mkdirSync(PLUGIN_DIR, { recursive: true });
+          fs.writeFileSync(PREFS_PATH, JSON.stringify(normalized, null, 2), 'utf8');
+        } catch {}
+      }
+      return normalized;
+    }
+
+    function savePrefs(patch) {
+      const current = loadPrefs();
+      const nextRaw = { ...current, ...(patch && typeof patch === 'object' ? patch : {}), prefsVersion: 2 };
+      const next = normalizePrefs(nextRaw);
+      try {
+        fs.mkdirSync(PLUGIN_DIR, { recursive: true });
+        const tmp = `${PREFS_PATH}.tmp.${process.pid}.${Date.now()}`;
+        fs.writeFileSync(tmp, JSON.stringify(next, null, 2), 'utf8');
+        try {
+          fs.renameSync(tmp, PREFS_PATH);
+        } catch {
+          fs.copyFileSync(tmp, PREFS_PATH);
+          fs.rmSync(tmp, { force: true });
+        }
+      } catch {}
+      return next;
+    }
+
+    function readBase64Asset(absPath, maxBytes = 8 * 1024 * 1024) {
+      try {
+        if (!absPath || !fs.existsSync(absPath)) return '';
+        const st = fs.statSync(absPath);
+        if (!st.isFile() || st.size <= 0 || st.size > maxBytes) return '';
+        return fs.readFileSync(absPath).toString('base64');
+      } catch {
+        return '';
+      }
+    }
+
+    function readImageDataUrl(absPath, maxBytes = 6 * 1024 * 1024) {
+      if (!absPath) return '';
+      const ext = path.extname(absPath).toLowerCase();
+      const mime = IMAGE_MIME_MAP[ext];
+      if (!mime) return '';
+      const b64 = readBase64Asset(absPath, maxBytes);
+      return b64 ? `data:${mime};base64,${b64}` : '';
+    }
+
+    function loadBootAssets(prefs) {
+      const defaultFrames = {};
+      const frames = {};
+      const customFrames = (prefs && prefs.customFrames) || {};
+      for (const name of FRAME_KEYS) {
+        const defPath = path.join(PLUGIN_DIR, 'assets', 'frames', `${name}.webp`);
+        const defUrl = readImageDataUrl(defPath, 2 * 1024 * 1024);
+        if (defUrl) defaultFrames[name] = defUrl;
+
+        const customUrl = customFrames[name] ? readImageDataUrl(customFrames[name], 6 * 1024 * 1024) : '';
+        if (customUrl) {
+          frames[name] = customUrl;
+        } else if (defUrl) {
+          frames[name] = defUrl;
+        }
+      }
+
+      const sounds = {};
+      for (const name of SOUND_FILES) {
+        const sp = path.join(PLUGIN_DIR, 'assets', 'sounds', `${name}.wav`);
+        const b64 = readBase64Asset(sp, 2 * 1024 * 1024);
+        if (b64) {
+          sounds[name] = b64;
+        }
+      }
+
+      let customAudio = null;
+      if (prefs && prefs.customAudioPath) {
+        const ext = path.extname(prefs.customAudioPath).toLowerCase();
+        const mime = AUDIO_MIME_MAP[ext] || '';
+        const b64 = mime ? readBase64Asset(prefs.customAudioPath, 8 * 1024 * 1024) : '';
+        if (b64) {
+          customAudio = {
+            path: prefs.customAudioPath,
+            name: path.basename(prefs.customAudioPath),
+            mime,
+            b64
+          };
+        }
+      }
+
+      return { frames, defaultFrames, sounds, customAudio };
     }
 
     function isPidAlive(pid) {
@@ -245,7 +468,7 @@
 
     let fallbackQuotaCache = { data: null, fetchedAt: 0 };
     let fallbackPlanCache = { data: null, fetchedAt: 0 };
-    let fallbackMetaCache = new Map();
+    const fallbackMetaCache = new Map();
 
     async function getFallbackSummary(reqConvId, forceRefresh) {
       const now = Date.now();
@@ -263,18 +486,20 @@
           const groups = rawGroups.map((g) => {
             const buckets = (g.buckets || []).map((b) => {
               const rem = typeof b.remainingFraction === 'number' ? Math.max(0, Math.min(1, b.remainingFraction)) : 0;
+              const resetMs = b.resetTime ? Date.parse(b.resetTime) || 0 : 0;
               return {
                 bucketId: b.bucketId || '',
                 windowKind: b.window || 'other',
                 windowLabel: b.window === '5h' ? '5-hour' : (b.window === 'weekly' ? 'Weekly' : (b.displayName || 'Quota')),
                 remainingPct: Math.round(rem * 1000) / 10,
                 usedPct: Math.round((1 - rem) * 1000) / 10,
+                resetMs,
                 resetAtIso: b.resetTime || '',
-                resetAtMs: b.resetTime ? Date.parse(b.resetTime) || 0 : 0
+                resetAtMs: resetMs
               };
             });
             return {
-              key: (g.displayName || '').toLowerCase().includes('claude') ? 'anthropic_openai' : ((g.displayName || '').toLowerCase().includes('argon') ? 'argon' : 'google'),
+              key: (g.displayName || '').toLowerCase().includes('claude') ? 'claude' : ((g.displayName || '').toLowerCase().includes('argon') ? 'argon' : 'gemini'),
               label: g.displayName || 'Quota',
               description: g.description || '',
               buckets
@@ -397,10 +622,125 @@
     }
 
     ipcMain.handle('neko-hud:get-boot', async () => {
+      const prefs = loadPrefs();
+      const assets = loadBootAssets(prefs);
       return {
         ok: true,
+        prefs,
+        frames: assets.frames,
+        defaultFrames: assets.defaultFrames,
+        sounds: assets.sounds,
+        customAudio: assets.customAudio,
         sidecarInfo: findSidecarServerInfo()
       };
+    });
+
+    ipcMain.handle('neko-hud:save-prefs', async (_event, patch) => {
+      return savePrefs(patch);
+    });
+
+    ipcMain.handle('neko-hud:pick-audio', async (event) => {
+      try {
+        const dialog = electron && electron.dialog;
+        const BrowserWindow = electron && electron.BrowserWindow;
+        if (!dialog) return { ok: false, error: 'Dialog unavailable' };
+        const win = (BrowserWindow && event && event.sender) ? BrowserWindow.fromWebContents(event.sender) : null;
+        const res = await dialog.showOpenDialog(win || undefined, {
+          title: '选择 Gemini 猫娘戳一戳音效文件',
+          filters: [
+            { name: '音频文件', extensions: ['wav', 'mp3', 'ogg', 'm4a', 'aac', 'flac', 'webm'] }
+          ],
+          properties: ['openFile']
+        });
+        if (!res || res.canceled || !Array.isArray(res.filePaths) || res.filePaths.length === 0) {
+          return { ok: false, canceled: true };
+        }
+        const filePath = res.filePaths[0];
+        const ext = path.extname(filePath).toLowerCase();
+        const mime = AUDIO_MIME_MAP[ext];
+        if (!mime) return { ok: false, error: '不支持的音频格式' };
+        const b64 = readBase64Asset(filePath, 8 * 1024 * 1024);
+        if (!b64) return { ok: false, error: '音频文件为空或超过 8MB 限制' };
+        const prefs = savePrefs({ customAudioPath: filePath, soundSet: 'custom', soundEnabled: true });
+        return {
+          ok: true,
+          prefs,
+          customAudio: {
+            path: filePath,
+            name: path.basename(filePath),
+            mime,
+            b64
+          }
+        };
+      } catch (err) {
+        return { ok: false, error: err.message || '打开文件选择器失败' };
+      }
+    });
+
+    ipcMain.handle('neko-hud:pick-frame', async (event, frameKey) => {
+      try {
+        const key = FRAME_KEYS.includes(frameKey) ? frameKey : 'idle';
+        const dialog = electron && electron.dialog;
+        const BrowserWindow = electron && electron.BrowserWindow;
+        if (!dialog) return { ok: false, error: 'Dialog unavailable' };
+        const win = (BrowserWindow && event && event.sender) ? BrowserWindow.fromWebContents(event.sender) : null;
+        const labelMap = { idle: '主形象', eat: '思考(吃大米)差分', xd: '戳一下(><)差分', grin: '彩蛋(呲牙笑)差分' };
+        const res = await dialog.showOpenDialog(win || undefined, {
+          title: `选择自定义${labelMap[key] || '形象'}图片 (支持 PNG/WebP/JPG/GIF)`,
+          filters: [
+            { name: '图片文件', extensions: ['png', 'webp', 'jpg', 'jpeg', 'gif'] }
+          ],
+          properties: ['openFile']
+        });
+        if (!res || res.canceled || !Array.isArray(res.filePaths) || res.filePaths.length === 0) {
+          return { ok: false, canceled: true };
+        }
+        const srcPath = res.filePaths[0];
+        const ext = path.extname(srcPath).toLowerCase();
+        const mime = IMAGE_MIME_MAP[ext];
+        if (!mime) return { ok: false, error: '不支持的图片格式' };
+        const st = fs.statSync(srcPath);
+        if (!st.isFile() || st.size <= 0 || st.size > 6 * 1024 * 1024) {
+          return { ok: false, error: '图片为空或超过 6MB 限制' };
+        }
+        fs.mkdirSync(CUSTOM_ASSETS_DIR, { recursive: true });
+        for (const existingExt of Object.keys(IMAGE_MIME_MAP)) {
+          const oldFile = path.join(CUSTOM_ASSETS_DIR, `${key}${existingExt}`);
+          if (fs.existsSync(oldFile)) {
+            try { fs.rmSync(oldFile, { force: true }); } catch {}
+          }
+        }
+        const destPath = path.join(CUSTOM_ASSETS_DIR, `${key}${ext}`);
+        fs.copyFileSync(srcPath, destPath);
+        const dataUrl = readImageDataUrl(destPath, 6 * 1024 * 1024);
+        if (!dataUrl) return { ok: false, error: '读取自定义图片失败' };
+
+        const current = loadPrefs();
+        const nextCustomFrames = { ...(current.customFrames || {}), [key]: destPath };
+        const prefs = savePrefs({ customFrames: nextCustomFrames });
+        return { ok: true, frameKey: key, dataUrl, prefs };
+      } catch (err) {
+        return { ok: false, error: err.message || '打开图片选择器失败' };
+      }
+    });
+
+    ipcMain.handle('neko-hud:reset-frames', async (_event, frameKey) => {
+      try {
+        const current = loadPrefs();
+        const nextCustomFrames = { ...(current.customFrames || {}) };
+        const targets = (frameKey && FRAME_KEYS.includes(frameKey)) ? [frameKey] : FRAME_KEYS;
+        for (const k of targets) {
+          if (nextCustomFrames[k] && nextCustomFrames[k].startsWith(CUSTOM_ASSETS_DIR)) {
+            try { fs.rmSync(nextCustomFrames[k], { force: true }); } catch {}
+          }
+          nextCustomFrames[k] = '';
+        }
+        const prefs = savePrefs({ customFrames: nextCustomFrames });
+        const assets = loadBootAssets(prefs);
+        return { ok: true, prefs, frames: assets.frames };
+      } catch (err) {
+        return { ok: false, error: err.message || '恢复默认形象失败' };
+      }
     });
 
     ipcMain.handle('neko-hud:get-state', async (_event, convId, forceRefresh) => {
@@ -412,14 +752,33 @@
         qs.set('strict', '1');
         if (forceRefresh) qs.set('refresh', '1');
         if (info.token) qs.set('token', info.token);
-        const res = await httpJsonRequest({
-          host: info.host || '127.0.0.1',
+        const host = info.host || '127.0.0.1';
+        const headers = info.token ? { 'X-Sidecar-Token': info.token } : {};
+        const summaryPromise = httpJsonRequest({
+          host,
           port: info.port,
           path: `/api/hud-summary?${qs.toString()}`,
-          headers: info.token ? { 'X-Sidecar-Token': info.token } : {},
-          timeoutMs: 1200
+          headers,
+          timeoutMs: 1400
         });
+        let quotaPromise = null;
+        if (forceRefresh === 'turn-end') {
+          const qQs = new URLSearchParams();
+          qQs.set('refresh', '1');
+          if (info.token) qQs.set('token', info.token);
+          quotaPromise = httpJsonRequest({
+            host,
+            port: info.port,
+            path: `/api/quota?${qQs.toString()}`,
+            headers,
+            timeoutMs: 2200
+          });
+        }
+        const [res, qRes] = await Promise.all([summaryPromise, quotaPromise]);
         if (res.ok && res.data) {
+          if (qRes && qRes.ok && qRes.data && qRes.data.quota) {
+            res.data.quota = qRes.data.quota;
+          }
           if (!normalizedConvId) res.data.conv = null;
           return res.data;
         }

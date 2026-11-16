@@ -1,8 +1,8 @@
 {
   "name": "gemini-neko-cockpit",
-  "displayName": "反重力观察窗 · Antigravity Observer",
-  "version": "1.1.0",
-  "description": "Google Antigravity 2.0 极简上下文观察窗增强插件：输入框下方超紧凑轮/步/tok/s/精准缓存命中统计栏、可顺畅滚动的上下文深度观察弹窗、账户 5h/周额度监控与原生 Sidecar 侧栏。",
+  "displayName": "Gemini 猫娘观察台 · Antigravity Observer",
+  "version": "1.2.0",
+  "description": "Google Antigravity 2.0 右下角 Gemini 猫娘挂件与上下文观察窗：平时静默呈现 Gemini 娘主形象，思考切换吃大米差分，戳一下触发 >< 差分、Q弹动画与可选音效，悬停/固定浮现上下文长度、Token 消耗与模型 5h/周剩余额度，兼容底部统计栏与 Sidecar 观察面板。",
   "logo": "assets/logo.png",
   "suggestedPrompts": [
     "打开反重力观察窗，看看当前上下文占用和缓存命中率",

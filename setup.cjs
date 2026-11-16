@@ -125,10 +125,29 @@ function installSidecarPlugin() {
     const src = path.join(REPO_ROOT, 'assets', f);
     if (fs.existsSync(src)) fs.copyFileSync(src, path.join(ASSETS_DEST_DIR, f));
   }
+  const framesSrcDir = path.join(REPO_ROOT, 'assets', 'frames');
+  const framesDestDir = path.join(ASSETS_DEST_DIR, 'frames');
+  if (fs.existsSync(framesSrcDir)) {
+    fs.mkdirSync(framesDestDir, { recursive: true });
+    for (const f of fs.readdirSync(framesSrcDir)) {
+      if (/\.(webp|png)$/i.test(f)) {
+        fs.copyFileSync(path.join(framesSrcDir, f), path.join(framesDestDir, f));
+      }
+    }
+  }
+  const soundsSrcDir = path.join(REPO_ROOT, 'assets', 'sounds');
+  const soundsDestDir = path.join(ASSETS_DEST_DIR, 'sounds');
+  if (fs.existsSync(soundsSrcDir)) {
+    fs.mkdirSync(soundsDestDir, { recursive: true });
+    for (const f of fs.readdirSync(soundsSrcDir)) {
+      if (/\.(wav|mp3|ogg)$/i.test(f)) {
+        fs.copyFileSync(path.join(soundsSrcDir, f), path.join(soundsDestDir, f));
+      }
+    }
+  }
   for (const oldFile of ['neko_strip.webp', 'neko_strip.png']) {
     try { fs.rmSync(path.join(ASSETS_DEST_DIR, oldFile), { force: true }); } catch {}
   }
-  try { fs.rmSync(path.join(PLUGIN_DEST_DIR, 'hud_prefs.json'), { force: true }); } catch {}
 
   fs.copyFileSync(
     path.join(REPO_ROOT, 'skills', PLUGIN_ID, 'SKILL.md'),
@@ -285,7 +304,14 @@ function checkStatus(resourcesDir) {
     fs.existsSync(path.join(SIDECAR_DEST_DIR, 'sidecar.json')) &&
     fs.existsSync(path.join(SIDECAR_DEST_DIR, 'server.cjs')) &&
     fs.existsSync(path.join(SIDECAR_DEST_DIR, 'ui.html'));
-  const assetsOk = fs.existsSync(path.join(ASSETS_DEST_DIR, 'logo.png'));
+  const assetsOk =
+    fs.existsSync(path.join(ASSETS_DEST_DIR, 'logo.png')) &&
+    fs.existsSync(path.join(ASSETS_DEST_DIR, 'frames', 'idle.webp')) &&
+    fs.existsSync(path.join(ASSETS_DEST_DIR, 'frames', 'eat.webp')) &&
+    fs.existsSync(path.join(ASSETS_DEST_DIR, 'frames', 'xd.webp')) &&
+    fs.existsSync(path.join(ASSETS_DEST_DIR, 'frames', 'grin.webp')) &&
+    fs.existsSync(path.join(ASSETS_DEST_DIR, 'sounds', 'boing_press.wav')) &&
+    fs.existsSync(path.join(ASSETS_DEST_DIR, 'sounds', 'boing_release.wav'));
   const skillOk = fs.existsSync(path.join(SKILL_DEST_DIR, 'SKILL.md'));
   const asarStatus = checkAsarStatus(resourcesDir);
 
@@ -313,11 +339,13 @@ async function runDoctor(args, resourcesDir) {
   const contracts = [
     {
       id: 'neko_plugin_files',
-      title: 'Antigravity Observer Plugin & Sidecar Sync',
+      title: 'Antigravity Observer & Gemini Catgirl Widget Assets Sync',
       status:
         fs.existsSync(path.join(PLUGIN_DEST_DIR, 'plugin.json')) &&
         fs.existsSync(path.join(SIDECAR_DEST_DIR, 'server.cjs')) &&
-        fs.existsSync(path.join(ASSETS_DEST_DIR, 'logo.png'))
+        fs.existsSync(path.join(ASSETS_DEST_DIR, 'logo.png')) &&
+        fs.existsSync(path.join(ASSETS_DEST_DIR, 'frames', 'idle.webp')) &&
+        fs.existsSync(path.join(ASSETS_DEST_DIR, 'sounds', 'boing_release.wav'))
           ? 'pass'
           : 'fail',
       detail: `Plugin dir: ${PLUGIN_DEST_DIR}`

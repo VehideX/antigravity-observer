@@ -4,11 +4,11 @@
     "server.cjs"
   ],
   "restart_policy": "always",
-  "display_name": "反重力观察窗",
-  "description": "实时监控 Antigravity 上下文窗口占用、Token 分桶与精确缓存命中率、模型 5h/周额度、轮次步数与 tok/s，配合主界面下方极简统计观察窗工作。",
+  "display_name": "Gemini 猫娘观察台",
+  "description": "实时监控 Antigravity 上下文窗口占用、Token 分桶与精确缓存命中率、模型 5h/周额度、轮次步数与 tok/s，配合应用内右下角 Gemini 猫娘挂件与下方统计观察窗工作。",
   "has_web_ui": true,
   "ui_config": {
-    "display_name": "反重力观察窗",
+    "display_name": "Gemini 猫娘观察台",
     "views": [
       {
         "title": "上下文与额度观察",

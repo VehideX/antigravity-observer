@@ -9,11 +9,29 @@
     const IDS = {
       style: 'gemini-neko-hud-style',
       stats: 'gemini-neko-stats-bar',
+      petRoot: 'gemini-neko-pet-root',
       modal: 'gemini-neko-observer-modal'
     };
 
+    const PAT_CURSOR_SVG = encodeURIComponent(
+      `<svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 28 28"><path d="M12.5 4.2c-.9 0-1.6.7-1.6 1.6v6.7l-.9-.9c-.7-.7-1.8-.7-2.4 0-.7.7-.6 1.8.1 2.4l4.1 4.2c1.1 1.1 2.5 1.8 4.1 1.8h2.6c2.7 0 4.9-2.2 4.9-4.9V9.8c0-.8-.7-1.5-1.5-1.5s-1.5.7-1.5 1.5v1.6h-.5V7.1c0-.8-.7-1.5-1.5-1.5s-1.5.7-1.5 1.5v3.6h-.5V5.8c0-.9-.7-1.6-1.6-1.6s-1.6.7-1.6 1.6v4.9h-.5V5.8c0-.9-.7-1.6-1.6-1.6z" fill="#fff" stroke="#3b2d5e" stroke-width="1.5" stroke-linejoin="round"/></svg>`
+    );
+
+    const BUILTIN_DIALOGUES = [
+      '好猫猫... ♥',
+      '好模型... ↓',
+      'token 自由喵～',
+      '今天也要一起写厉害的代码喵！',
+      'Gemini 5h 还有 {quota_5h}% 呢，放心使唤本喵～',
+      '上下文才占 {ctx_pct}%，本喵还很有精神喵！',
+      '本对话已用 {tokens} token 啦，真能聊喵～',
+      '吃饱大米就继续干活喵！',
+      '不知道用户有什么用…反正本喵很可爱喵！',
+      '别戳太用力啦……会变笨的喵 ><'
+    ];
+
     const CSS = `
-/* Antigravity Observer In-Window HUD */
+/* Antigravity Observer In-Window HUD + Gemini Catgirl Corner Widget */
 #${IDS.stats} {
   display: flex;
   align-items: center;
@@ -73,6 +91,8 @@
 .gn-bar-meta {
   display: flex;
   justify-content: space-between;
+  align-items: center;
+  gap: 8px;
   font-size: 11px;
   margin-bottom: 3px;
 }
@@ -85,7 +105,7 @@
 .gn-bar-fill {
   height: 100%;
   border-radius: 999px;
-  transition: width 0.25s ease;
+  transition: width 0.25s ease, background 0.25s ease;
 }
 .gn-kv-k {
   font-size: 10px;
@@ -105,11 +125,503 @@
   background: transparent;
   color: inherit;
   cursor: pointer;
+  transition: background 0.14s ease, border-color 0.14s ease;
+}
+.gn-chip:hover {
+  border-color: rgba(139, 92, 246, 0.65);
+  background: rgba(139, 92, 246, 0.12);
 }
 .gn-chip.is-active {
   background: #7c3aed;
   color: #fff;
   border-color: #7c3aed;
+}
+
+/* ---- Bottom-Right Gemini Catgirl Corner Widget ---- */
+#${IDS.petRoot} {
+  position: fixed;
+  z-index: 2147482800;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-user-drag: none;
+  -webkit-app-region: no-drag;
+  pointer-events: none;
+  transition: left 0.22s cubic-bezier(0.22, 1, 0.36, 1), top 0.22s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.2s ease;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+}
+#${IDS.petRoot}.is-dragging,
+#${IDS.petRoot}.is-resizing {
+  transition: none !important;
+}
+#${IDS.petRoot} * {
+  box-sizing: border-box;
+  -webkit-app-region: no-drag;
+}
+#${IDS.petRoot} .gn-stage {
+  position: relative;
+  pointer-events: auto;
+  width: var(--gn-size, 112px);
+  height: var(--gn-size, 112px);
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+}
+#${IDS.petRoot}.is-left .gn-stage {
+  justify-content: flex-start;
+}
+#${IDS.petRoot}.is-top .gn-stage {
+  align-items: flex-start;
+}
+
+/* Avatar Q-Elastic Wrapper & Frames */
+#${IDS.petRoot} .gn-avatar-btn {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  background: transparent;
+  outline: none;
+  cursor: url("data:image/svg+xml,${PAT_CURSOR_SVG}") 13 9, pointer;
+  touch-action: none;
+  transform-origin: 50% 100%;
+  transition: transform 0.24s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.2s ease;
+  filter: drop-shadow(0 4px 12px rgba(15, 13, 38, 0.28));
+}
+#${IDS.petRoot}.is-top .gn-avatar-btn {
+  transform-origin: 50% 0%;
+}
+#${IDS.petRoot} .gn-avatar-btn:hover {
+  filter: drop-shadow(0 6px 16px rgba(109, 40, 217, 0.34));
+}
+#${IDS.petRoot}.is-dragging .gn-avatar-btn {
+  cursor: grabbing;
+  transform: scale(1.04) rotate(-2deg);
+}
+#${IDS.petRoot} .gn-avatar-btn.is-pressed {
+  transform: scaleX(1.06) scaleY(0.87) !important;
+  transition: transform 0.07s ease-out !important;
+}
+#${IDS.petRoot} .gn-avatar-flip {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  transition: transform 0.26s ease;
+  pointer-events: none;
+}
+#${IDS.petRoot}.is-left .gn-avatar-flip {
+  transform: scaleX(-1);
+}
+#${IDS.petRoot} .gn-avatar-anim {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  pointer-events: none;
+  animation: gnNekoFloat 4.4s ease-in-out infinite;
+}
+#${IDS.petRoot}[data-pose="eat"] .gn-avatar-anim {
+  animation: gnNekoEat 0.68s ease-in-out infinite;
+}
+#${IDS.petRoot}[data-pose="xd"] .gn-avatar-anim {
+  animation: gnNekoPoke 0.38s ease-out;
+}
+#${IDS.petRoot}[data-pose="grin"] .gn-avatar-anim {
+  animation: gnNekoGrin 0.55s ease-in-out infinite;
+}
+@keyframes gnNekoFloat {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-2.5px); }
+}
+@keyframes gnNekoEat {
+  0%, 100% { transform: translateY(0px) scale(1, 1); }
+  35% { transform: translateY(1px) scale(1.02, 0.98); }
+  70% { transform: translateY(-2px) scale(0.99, 1.02); }
+}
+@keyframes gnNekoPoke {
+  0% { transform: scale(1.04, 0.94) rotate(-2deg); }
+  45% { transform: scale(0.97, 1.04) rotate(2deg); }
+  100% { transform: scale(1, 1) rotate(0deg); }
+}
+@keyframes gnNekoGrin {
+  0%, 100% { transform: translateY(0px) rotate(-1deg); }
+  50% { transform: translateY(-3px) rotate(1.5deg); }
+}
+
+#${IDS.petRoot} .gn-frame {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: bottom right;
+  opacity: 0;
+  pointer-events: none;
+  -webkit-user-drag: none;
+  user-select: none;
+}
+#${IDS.petRoot} .gn-frame.is-active {
+  opacity: 1;
+}
+
+/* ---- SVG Oval Thought Bubble (Left-Click 3-Step Flow) ---- */
+#${IDS.petRoot} .gn-thought-wrap {
+  position: absolute;
+  bottom: calc(100% - 4px);
+  right: 12px;
+  width: min(calc(222px * var(--gn-bubble-scale, 1)), calc(100vw - 24px));
+  height: calc(152px * var(--gn-bubble-scale, 1));
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(8px) scale(0.92);
+  transform-origin: 76% 96%;
+  transition: opacity 0.2s ease, transform 0.22s cubic-bezier(0.34, 1.4, 0.64, 1), width 0.16s ease, height 0.16s ease;
+  z-index: 9;
+}
+#${IDS.petRoot}.is-left .gn-thought-wrap {
+  right: auto;
+  left: 12px;
+  transform-origin: 24% 96%;
+}
+#${IDS.petRoot}.is-top .gn-thought-wrap {
+  bottom: auto;
+  top: calc(100% - 4px);
+  transform: translateY(-8px) scale(0.92);
+  transform-origin: 76% 4%;
+}
+#${IDS.petRoot}.is-top.is-left .gn-thought-wrap {
+  transform-origin: 24% 4%;
+}
+#${IDS.petRoot}.is-bubble-open .gn-thought-wrap {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0) scale(1);
+}
+#${IDS.petRoot}.is-panel-open .gn-thought-wrap {
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+#${IDS.petRoot} .gn-thought-svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+  overflow: visible;
+  filter: drop-shadow(0 8px 20px rgba(15, 23, 42, 0.22));
+  transition: transform 0.25s ease;
+}
+#${IDS.petRoot}.is-left .gn-thought-svg {
+  transform: scaleX(-1);
+}
+#${IDS.petRoot}.is-top .gn-thought-svg {
+  transform: scaleY(-1);
+}
+#${IDS.petRoot}.is-top.is-left .gn-thought-svg {
+  transform: scale(-1, -1);
+}
+#${IDS.petRoot} .gn-thought-hit {
+  position: absolute;
+  left: 8%;
+  top: 5%;
+  width: 84%;
+  height: 65%;
+  border-radius: 999px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: calc(8px * var(--gn-bubble-scale, 1)) calc(18px * var(--gn-bubble-scale, 1));
+  overflow: hidden;
+  transition: opacity 0.16s ease;
+}
+#${IDS.petRoot}.is-top .gn-thought-hit {
+  top: 30%;
+}
+#${IDS.petRoot} .gn-thought-hit.is-fading {
+  opacity: 0;
+}
+.gn-th-label {
+  font-size: calc(11px * var(--gn-bubble-scale, 1));
+  font-weight: 700;
+  color: #3b4b8c;
+  line-height: 1.2;
+}
+.gn-th-hero {
+  font-size: calc(21px * var(--gn-bubble-scale, 1));
+  font-weight: 900;
+  line-height: 1.1;
+  margin: 1px 0 2px;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+.gn-th-sub {
+  font-size: calc(10px * var(--gn-bubble-scale, 1));
+  font-weight: 600;
+  color: #5b6b88;
+  line-height: 1.25;
+  font-variant-numeric: tabular-nums;
+}
+.gn-th-line {
+  font-size: calc(13px * var(--gn-bubble-scale, 1));
+  font-weight: 800;
+  color: #33418c;
+  line-height: 1.35;
+  word-break: break-word;
+  max-width: 100%;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.gn-th-hint {
+  margin-top: 3px;
+  font-size: calc(9px * var(--gn-bubble-scale, 1));
+  color: #94a3b8;
+  font-weight: 600;
+}
+
+/* ---- Right-Click Card (Image 4) & Standalone Settings Popover ---- */
+#${IDS.petRoot} .gn-panel {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  right: 8px;
+  width: 306px;
+  max-width: calc(100vw - 20px);
+  max-height: min(76vh, 540px);
+  overflow-y: auto;
+  padding: 11px 12px;
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--card, #141724) 96%, #121526);
+  color: var(--foreground, #f8fafc);
+  border: 1px solid rgba(167, 139, 250, 0.38);
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.44);
+  backdrop-filter: blur(16px);
+  z-index: 12;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateY(8px) scale(0.97);
+  transition: opacity 0.18s ease, transform 0.18s ease, visibility 0.18s ease;
+}
+#${IDS.petRoot}.is-left .gn-panel {
+  right: auto;
+  left: 8px;
+}
+#${IDS.petRoot}.is-top .gn-panel {
+  bottom: auto;
+  top: calc(100% + 6px);
+  transform: translateY(-8px) scale(0.97);
+}
+#${IDS.petRoot}.is-panel-open .gn-panel {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translateY(0) scale(1);
+}
+
+.gn-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid color-mix(in srgb, var(--border, rgba(255,255,255,0.12)) 85%, transparent);
+}
+.gn-card-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  font-weight: 800;
+  min-width: 0;
+}
+.gn-state-tag {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: rgba(139, 92, 246, 0.18);
+  color: color-mix(in srgb, #8b5cf6 55%, var(--foreground, #e9d5ff));
+  border: 1px solid rgba(139, 92, 246, 0.38);
+  white-space: nowrap;
+}
+.gn-state-tag.is-eat {
+  background: rgba(245, 158, 11, 0.18);
+  color: color-mix(in srgb, #f59e0b 65%, var(--foreground, #fef3c7));
+  border-color: rgba(245, 158, 11, 0.42);
+}
+.gn-state-tag.is-xd {
+  background: rgba(236, 72, 153, 0.18);
+  color: color-mix(in srgb, #ec4899 65%, var(--foreground, #fce7f3));
+  border-color: rgba(236, 72, 153, 0.42);
+}
+.gn-state-tag.is-grin {
+  background: rgba(16, 185, 129, 0.18);
+  color: color-mix(in srgb, #10b981 65%, var(--foreground, #d1fae5));
+  border-color: rgba(16, 185, 129, 0.42);
+}
+.gn-card-sec {
+  margin-top: 9px;
+}
+.gn-card-sec-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted-foreground, #94a3b8);
+  margin-bottom: 5px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 6px;
+}
+.gn-kv-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+.gn-kv {
+  padding: 6px 8px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--foreground, #fff) 5%, transparent);
+  border: 1px solid color-mix(in srgb, var(--border, rgba(255,255,255,0.1)) 85%, transparent);
+}
+.gn-sub-breakdown {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 7px;
+  margin-top: 4px;
+  font-size: 10px;
+  color: var(--muted-foreground, #94a3b8);
+}
+.gn-card-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+.gn-btn {
+  flex: 1 1 auto;
+  padding: 6px 8px;
+  border-radius: 8px;
+  border: 1px solid color-mix(in srgb, var(--border, rgba(255,255,255,0.18)) 90%, transparent);
+  background: color-mix(in srgb, var(--foreground, #fff) 7%, transparent);
+  color: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: center;
+  white-space: nowrap;
+  transition: border-color 0.14s ease, background 0.14s ease;
+}
+.gn-btn:hover {
+  border-color: #8b5cf6;
+  background: rgba(139, 92, 246, 0.16);
+}
+.gn-btn-primary {
+  background: linear-gradient(135deg, #7c3aed, #2563eb);
+  color: #fff;
+  border-color: transparent;
+}
+.gn-btn-primary:hover {
+  filter: brightness(1.08);
+}
+.gn-set-row {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid color-mix(in srgb, var(--border, rgba(255,255,255,0.08)) 85%, transparent);
+}
+.gn-set-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11.5px;
+  font-weight: 600;
+  margin-bottom: 5px;
+}
+.gn-range {
+  width: 100%;
+  accent-color: #8b5cf6;
+  cursor: pointer;
+}
+.gn-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.gn-input-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.gn-text-input {
+  flex: 1;
+  min-width: 0;
+  padding: 5px 8px;
+  border-radius: 7px;
+  border: 1px solid color-mix(in srgb, var(--border, rgba(255,255,255,0.22)) 90%, transparent);
+  background: color-mix(in srgb, var(--foreground, #fff) 5%, transparent);
+  color: inherit;
+  font-size: 11px;
+  outline: none;
+}
+.gn-text-input:focus {
+  border-color: #8b5cf6;
+}
+.gn-dialogue-list {
+  margin-top: 6px;
+  max-height: 92px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.gn-dialogue-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 3px 6px;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--foreground, #fff) 5%, transparent);
+  font-size: 10.5px;
+}
+.gn-dialogue-item span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.gn-del-btn {
+  border: 0;
+  background: transparent;
+  color: var(--muted-foreground, #94a3b8);
+  cursor: pointer;
+  font-size: 12px;
+  padding: 0 3px;
+  line-height: 1;
+}
+.gn-del-btn:hover {
+  color: #ef4444;
+}
+
+/* Floating Heart / Sparkle Particles */
+.gn-particle {
+  position: fixed;
+  z-index: 2147482950;
+  pointer-events: none;
+  font-size: 14px;
+  font-weight: 700;
+  animation: gnParticleRise 0.92s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+@keyframes gnParticleRise {
+  0% { opacity: 0; transform: translate(-50%, 0) scale(0.6); }
+  20% { opacity: 1; transform: translate(-50%, -10px) scale(1.12); }
+  100% { opacity: 0; transform: translate(-50%, -48px) scale(0.88); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #${IDS.petRoot} .gn-avatar-anim {
+    animation: none !important;
+  }
 }
 
 /* Full Context Observation Modal (反重力上下文观察窗口) */
@@ -226,6 +738,19 @@
       if (days > 0) return `${days}天${hrs % 24}小时后重置`;
       if (hrs > 0) return `${hrs}小时${mins % 60}分后重置`;
       return `${Math.max(1, mins)}分钟后重置`;
+    }
+
+    function fmtResetCompact(isoOrMs) {
+      const ms = typeof isoOrMs === 'number' ? isoOrMs : Date.parse(isoOrMs || '');
+      if (!ms || !Number.isFinite(ms)) return '';
+      const diff = Math.max(0, ms - Date.now());
+      if (diff <= 0) return '即将重置';
+      const mins = Math.floor(diff / 60000);
+      const hrs = Math.floor(mins / 60);
+      const days = Math.floor(hrs / 24);
+      if (days > 0) return `${days}d${hrs % 24}h`;
+      if (hrs > 0) return `${hrs}h${mins % 60}m`;
+      return `${Math.max(1, mins)}m`;
     }
 
     function esc(s) {
@@ -346,6 +871,29 @@
 
     // ---- HUD State ----
     const hud = {
+      prefs: {
+        prefsVersion: 2,
+        enabled: true,
+        showStatsBar: true,
+        size: 112,
+        bubbleScale: 1,
+        opacity: 1,
+        soundEnabled: true,
+        soundSet: 'boing',
+        volume: 0.78,
+        customAudioPath: '',
+        completionEasterEgg: true,
+        completionSound: false,
+        turnCostBubble: true,
+        anchor: { v: 2, hAnchor: 'right', hDist: 0, vAnchor: 'bottom', vDist: 0 },
+        patCount: 0,
+        customDialogues: [],
+        customFrames: { idle: '', eat: '', grin: '', xd: '' }
+      },
+      frames: {},
+      defaultFrames: {},
+      soundsB64: {},
+      customAudio: null,
       activeConvId: '__init__',
       refreshSeq: 0,
       state: null,
@@ -353,9 +901,249 @@
       modalConvId: '',
       modalBreakdown: null,
       modalConvList: [],
-      pollTimer: null
+      pollTimer: null,
+      // Pet runtime state
+      composing: false,
+      bubbleStage: 0, // 0 = closed, 1 = quota & context, 2 = dialogue line, 3 = turn-end quota cost (10s)
+      currentDialogue: '',
+      lastDialogueText: '',
+      panelMode: '', // '' | 'card' (Image 4) | 'settings'
+      pokeUntil: 0,
+      pokeTimer: null,
+      celebrateUntil: 0,
+      celebrateTimer: null,
+      pokeCombo: 0,
+      lastPokeAt: 0,
+      wasThinking: false,
+      turnBaseline: null,
+      turnEndTimer: null,
+      turnBubbleTimer: null,
+      turnSummary: null,
+      curPose: 'idle'
     };
 
+    // ---- Web Audio Engine (Pre-decoded IPC buffers + IME guard + Idle Suspend) ----
+    const AUDIO_IDLE_MS = 60000;
+    const RELEASE_LEAD_MS = 28;
+    let audioCtx = null;
+    let audioSuspendTimer = null;
+    const decodedAudio = Object.create(null);
+    const decodingAudio = Object.create(null);
+    let lastPressPlayback = { startedAt: 0, duration: 0, key: '' };
+
+    function suspendAudioNow() {
+      if (audioSuspendTimer) {
+        clearTimeout(audioSuspendTimer);
+        audioSuspendTimer = null;
+      }
+      if (audioCtx && audioCtx.state === 'running') {
+        try { audioCtx.suspend(); } catch {}
+      }
+    }
+
+    function armAudioIdle() {
+      if (audioSuspendTimer) clearTimeout(audioSuspendTimer);
+      audioSuspendTimer = setTimeout(() => {
+        audioSuspendTimer = null;
+        suspendAudioNow();
+      }, AUDIO_IDLE_MS);
+    }
+
+    function getAudioCtx(createIfNeeded = true) {
+      if (!hud.prefs.soundEnabled) return null;
+      if (!audioCtx && createIfNeeded) {
+        const AC = window.AudioContext || window.webkitAudioContext;
+        if (!AC) return null;
+        try {
+          audioCtx = new AC({ latencyHint: 'interactive' });
+        } catch {
+          return null;
+        }
+      }
+      if (audioCtx && audioCtx.state === 'suspended') {
+        try { audioCtx.resume(); } catch {}
+      }
+      if (audioCtx) armAudioIdle();
+      return audioCtx;
+    }
+
+    function base64ToArrayBuffer(b64) {
+      const bin = atob(b64);
+      const len = bin.length;
+      const bytes = new Uint8Array(len);
+      for (let i = 0; i < len; i++) {
+        bytes[i] = bin.charCodeAt(i);
+      }
+      return bytes.buffer;
+    }
+
+    function decodeSoundKey(key, b64) {
+      if (!key || !b64) return Promise.resolve(null);
+      if (decodedAudio[key]) return Promise.resolve(decodedAudio[key]);
+      if (decodingAudio[key]) return decodingAudio[key];
+      const ctx = getAudioCtx(true);
+      if (!ctx) return Promise.resolve(null);
+      try {
+        const rawBuf = base64ToArrayBuffer(b64);
+        decodingAudio[key] = new Promise((resolve) => {
+          try {
+            ctx.decodeAudioData(
+              rawBuf,
+              (buf) => {
+                decodedAudio[key] = buf;
+                delete decodingAudio[key];
+                resolve(buf);
+              },
+              () => {
+                delete decodingAudio[key];
+                resolve(null);
+              }
+            );
+          } catch {
+            delete decodingAudio[key];
+            resolve(null);
+          }
+        });
+        return decodingAudio[key];
+      } catch {
+        return Promise.resolve(null);
+      }
+    }
+
+    function warmActiveSounds() {
+      if (!hud.prefs.soundEnabled) return;
+      if (hud.composing) return;
+      const set = hud.prefs.soundSet || 'boing';
+      if (set === 'custom' && hud.customAudio && hud.customAudio.b64) {
+        void decodeSoundKey('custom', hud.customAudio.b64);
+      } else {
+        const activeSet = ['boing', 'nya', 'duck'].includes(set) ? set : 'boing';
+        if (hud.soundsB64[`${activeSet}_press`]) void decodeSoundKey(`${activeSet}_press`, hud.soundsB64[`${activeSet}_press`]);
+        if (hud.soundsB64[`${activeSet}_release`]) void decodeSoundKey(`${activeSet}_release`, hud.soundsB64[`${activeSet}_release`]);
+      }
+      if (hud.soundsB64.combo_chime) void decodeSoundKey('combo_chime', hud.soundsB64.combo_chime);
+    }
+
+    function playOscFallback(kind) {
+      const ctx = getAudioCtx(true);
+      if (!ctx) return;
+      try {
+        const now = ctx.currentTime;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        const vol = Math.max(0, Math.min(1, Number(hud.prefs.volume) || 0.78)) * 0.22;
+        if (vol <= 0.001) return;
+        osc.type = 'sine';
+        if (kind === 'press') {
+          osc.frequency.setValueAtTime(340, now);
+          osc.frequency.exponentialRampToValueAtTime(240, now + 0.055);
+          gain.gain.setValueAtTime(0.001, now);
+          gain.gain.linearRampToValueAtTime(vol, now + 0.008);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(now);
+          osc.stop(now + 0.065);
+        } else {
+          osc.frequency.setValueAtTime(520, now);
+          osc.frequency.exponentialRampToValueAtTime(860, now + 0.09);
+          gain.gain.setValueAtTime(0.001, now);
+          gain.gain.linearRampToValueAtTime(vol, now + 0.01);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.14);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(now);
+          osc.stop(now + 0.15);
+        }
+      } catch {}
+    }
+
+    function playDecodedBuffer(buf, delaySec = 0) {
+      const ctx = getAudioCtx(true);
+      if (!ctx || !buf) return false;
+      const vol = Math.max(0, Math.min(1, Number(hud.prefs.volume) ?? 0.78));
+      if (vol <= 0.001) return true;
+      try {
+        const gain = ctx.createGain();
+        gain.gain.value = vol;
+        gain.connect(ctx.destination);
+        const src = ctx.createBufferSource();
+        src.buffer = buf;
+        src.connect(gain);
+        src.start(delaySec > 0 ? ctx.currentTime + delaySec : 0);
+        return true;
+      } catch {
+        return false;
+      }
+    }
+
+    function playKeyedSound(key, b64, delaySec = 0, fallbackKind = 'release') {
+      if (!hud.prefs.soundEnabled) return;
+      const vol = Math.max(0, Math.min(1, Number(hud.prefs.volume) ?? 0.78));
+      if (vol <= 0.001) return;
+      if (decodedAudio[key]) {
+        playDecodedBuffer(decodedAudio[key], delaySec);
+        return;
+      }
+      if (b64) {
+        decodeSoundKey(key, b64).then((buf) => {
+          if (buf) playDecodedBuffer(buf, 0);
+          else playOscFallback(fallbackKind);
+        });
+        return;
+      }
+      playOscFallback(fallbackKind);
+    }
+
+    function playPressSound() {
+      if (!hud.prefs.soundEnabled) return;
+      const set = hud.prefs.soundSet || 'boing';
+      if (set === 'custom') return;
+      const key = `${set}_press`;
+      const b64 = hud.soundsB64[key];
+      const buf = decodedAudio[key];
+      if (buf) {
+        lastPressPlayback = { startedAt: performance.now(), duration: buf.duration, key };
+        playDecodedBuffer(buf, 0);
+      } else {
+        lastPressPlayback = { startedAt: performance.now(), duration: 0.06, key };
+        playKeyedSound(key, b64, 0, 'press');
+      }
+    }
+
+    function playPokeReleaseSound(isCombo = false) {
+      if (!hud.prefs.soundEnabled) return;
+      if (isCombo && hud.soundsB64.combo_chime) {
+        playKeyedSound('combo_chime', hud.soundsB64.combo_chime, 0.02, 'release');
+        return;
+      }
+      const set = hud.prefs.soundSet || 'boing';
+      if (set === 'custom' && hud.customAudio && hud.customAudio.b64) {
+        playKeyedSound('custom', hud.customAudio.b64, 0, 'release');
+        return;
+      }
+      const activeSet = ['boing', 'nya', 'duck'].includes(set) ? set : 'boing';
+      const key = `${activeSet}_release`;
+      const b64 = hud.soundsB64[key];
+      let delaySec = 0;
+      if (lastPressPlayback.startedAt > 0 && lastPressPlayback.duration > 0) {
+        const elapsed = (performance.now() - lastPressPlayback.startedAt) / 1000;
+        const remain = lastPressPlayback.duration - elapsed;
+        if (remain > 0.005) {
+          delaySec = Math.max(0, remain - RELEASE_LEAD_MS / 1000);
+        }
+      }
+      playKeyedSound(key, b64, delaySec, 'release');
+    }
+
+    function playCompletionSound() {
+      if (!hud.prefs.soundEnabled || !hud.prefs.completionSound) return;
+      if (hud.soundsB64.combo_chime) {
+        playKeyedSound('combo_chime', hud.soundsB64.combo_chime, 0, 'release');
+      }
+    }
+
+    // ---- Shared Conversation Sync ----
     function syncActiveConversation() {
       const nextId = detectActiveConvId();
       if (nextId === hud.activeConvId) return false;
@@ -367,7 +1155,14 @@
       }
       hud.modalConvId = nextId;
       hud.modalBreakdown = null;
+      hud.wasThinking = false;
+      hud.turnBaseline = null;
+      if (hud.turnEndTimer) {
+        clearTimeout(hud.turnEndTimer);
+        hud.turnEndTimer = null;
+      }
       updateStatsBar();
+      updatePetWidget();
       if (hud.modalOpen) renderObserverModal();
       if (prevId !== '__init__') {
         refreshTelemetry(true);
@@ -375,8 +1170,26 @@
       return true;
     }
 
+    function savePrefsPatch(patch) {
+      hud.prefs = { ...hud.prefs, ...patch };
+      applyPetPositionFromAnchor();
+      updateStatsBar();
+      updatePetWidget();
+      return ipcRenderer.invoke('neko-hud:save-prefs', patch).then((saved) => {
+        if (saved && typeof saved === 'object') {
+          hud.prefs = { ...hud.prefs, ...saved };
+        }
+        return hud.prefs;
+      }).catch(() => hud.prefs);
+    }
+
     // ---- Component A: Input Stats Bar ----
     function mountStatsBarOnly() {
+      if (hud.prefs.showStatsBar === false) {
+        const old = document.getElementById(IDS.stats);
+        if (old) old.remove();
+        return false;
+      }
       const inputBox = findVisibleEl('[data-testid="agent-input-box"]') || document.querySelector('[data-testid="agent-input-box"]');
       if (!inputBox || !inputBox.parentElement) return false;
       let bar = document.getElementById(IDS.stats);
@@ -476,6 +1289,1143 @@
         </span>
       `;
       if (bar.innerHTML !== nextHtml) bar.innerHTML = nextHtml;
+    }
+
+    // ---- Component C: Bottom-Right Gemini Catgirl Corner Widget ----
+    function computeAnchorFromRect(left, top, size) {
+      const vw = Math.max(200, window.innerWidth || 1280);
+      const vh = Math.max(200, window.innerHeight || 800);
+      const leftDist = Math.max(0, left);
+      const rightDist = Math.max(0, vw - (left + size));
+      const topDist = Math.max(0, top);
+      const bottomDist = Math.max(0, vh - (top + size));
+      return {
+        v: 2,
+        hAnchor: leftDist <= rightDist ? 'left' : 'right',
+        hDist: Math.round(Math.min(leftDist, rightDist)),
+        vAnchor: topDist <= bottomDist ? 'top' : 'bottom',
+        vDist: Math.round(Math.min(topDist, bottomDist))
+      };
+    }
+
+    function anchorToLeftTop(anchor, size) {
+      const vw = Math.max(200, window.innerWidth || 1280);
+      const vh = Math.max(200, window.innerHeight || 800);
+      const a = anchor || { v: 2, hAnchor: 'right', hDist: 0, vAnchor: 'bottom', vDist: 0 };
+      const maxLeft = Math.max(0, vw - size);
+      const maxTop = Math.max(0, vh - size);
+      const hDist = Math.min(Math.max(0, Number(a.hDist) || 0), maxLeft);
+      const vDist = Math.min(Math.max(0, Number(a.vDist) || 0), maxTop);
+      return {
+        left: a.hAnchor === 'left' ? hDist : Math.max(0, vw - size - hDist),
+        top: a.vAnchor === 'top' ? vDist : Math.max(0, vh - size - vDist)
+      };
+    }
+
+    function updateOrientationClasses(left, top, size) {
+      const root = document.getElementById(IDS.petRoot);
+      if (!root) return;
+      const vw = Math.max(200, window.innerWidth || 1280);
+      const vh = Math.max(200, window.innerHeight || 800);
+      const cx = left + size / 2;
+      const cy = top + size / 2;
+      root.classList.toggle('is-left', cx < vw * 0.5);
+      root.classList.toggle('is-top', cy < vh * 0.42);
+    }
+
+    function setPetLeftTop(left, top) {
+      const root = document.getElementById(IDS.petRoot);
+      if (!root) return;
+      const sz = hud.prefs.size || 112;
+      const vw = Math.max(200, window.innerWidth || 1280);
+      const vh = Math.max(200, window.innerHeight || 800);
+      const clampedL = Math.min(Math.max(0, Math.round(left)), Math.max(0, vw - sz));
+      const clampedT = Math.min(Math.max(0, Math.round(top)), Math.max(0, vh - sz));
+      root.style.left = `${clampedL}px`;
+      root.style.top = `${clampedT}px`;
+      root.style.right = 'auto';
+      root.style.bottom = 'auto';
+      updateOrientationClasses(clampedL, clampedT, sz);
+      return { left: clampedL, top: clampedT };
+    }
+
+    function applyPetPositionFromAnchor() {
+      const root = document.getElementById(IDS.petRoot);
+      if (!root) return;
+      const sz = Math.max(64, Math.min(200, Number(hud.prefs.size) || 112));
+      const bs = Math.max(0.65, Math.min(1.6, Number(hud.prefs.bubbleScale) || 1));
+      root.style.setProperty('--gn-size', `${sz}px`);
+      root.style.setProperty('--gn-bubble-scale', String(bs));
+      root.style.opacity = String(Math.max(0.35, Math.min(1, Number(hud.prefs.opacity) ?? 1)));
+      const pos = anchorToLeftTop(hud.prefs.anchor, sz);
+      setPetLeftTop(pos.left, pos.top);
+    }
+
+    function isThinkingNow() {
+      const conv = hud.state && hud.state.conv;
+      return detectDomBusy() || Boolean(conv && conv.isThinking);
+    }
+
+    function computePetPose() {
+      const now = Date.now();
+      if (now < hud.pokeUntil) return 'xd';
+      if (now < hud.celebrateUntil) return 'grin';
+      if (isThinkingNow()) return 'eat';
+      return 'idle';
+    }
+
+    function clearTurnBubbleTimer() {
+      if (hud.turnBubbleTimer) {
+        clearTimeout(hud.turnBubbleTimer);
+        hud.turnBubbleTimer = null;
+      }
+    }
+
+    function captureTurnBaseline() {
+      const { conv, activeGrp, fiveH, weekly } = getQuotaMetrics();
+      const used5 = fiveH
+        ? (typeof fiveH.usedPct === 'number'
+            ? fiveH.usedPct
+            : (typeof fiveH.remainingPct === 'number' ? Math.round((100 - fiveH.remainingPct) * 10) / 10 : null))
+        : null;
+      const usedWeek = weekly
+        ? (typeof weekly.usedPct === 'number'
+            ? weekly.usedPct
+            : (typeof weekly.remainingPct === 'number' ? Math.round((100 - weekly.remainingPct) * 10) / 10 : null))
+        : null;
+      hud.turnBaseline = {
+        convId: hud.activeConvId || (conv && conv.id) || '',
+        startedAt: Date.now(),
+        totalTokens: conv ? (Number(conv.totalTokens) || 0) : 0,
+        groupKey: (activeGrp && activeGrp.key) || '',
+        groupLabel: (activeGrp && activeGrp.label) || 'Gemini',
+        quota5hUsed: used5,
+        quotaWeekUsed: usedWeek
+      };
+    }
+
+    function showTurnCompletionBubble(summary) {
+      clearTurnBubbleTimer();
+      hud.turnSummary = summary;
+      hud.bubbleStage = 3;
+      hud.currentDialogue = '';
+      renderThoughtBubbleContent(false);
+      hud.turnBubbleTimer = setTimeout(() => {
+        hud.turnBubbleTimer = null;
+        if (hud.bubbleStage === 3) {
+          hud.bubbleStage = 0;
+          hud.turnSummary = null;
+          renderThoughtBubbleContent(false);
+        }
+      }, 10000);
+    }
+
+    function scheduleTurnCompletionSummary() {
+      const base = hud.turnBaseline;
+      hud.turnBaseline = null;
+      if (hud.prefs.turnCostBubble === false) return;
+      if (!base) return;
+      const targetConvId = base.convId || detectActiveConvId();
+      if (hud.turnEndTimer) clearTimeout(hud.turnEndTimer);
+      hud.turnEndTimer = setTimeout(async () => {
+        hud.turnEndTimer = null;
+        if (isThinkingNow()) return;
+        if (targetConvId && detectActiveConvId() !== targetConvId) return;
+        try {
+          const data = await ipcRenderer.invoke('neko-hud:get-state', targetConvId, 'turn-end');
+          if (isThinkingNow()) return;
+          if (targetConvId && detectActiveConvId() !== targetConvId) return;
+          if (data && data.ok) {
+            if (!targetConvId) data.conv = null;
+            hud.state = data;
+            ensureStatsBar();
+            if (hud.modalOpen) renderObserverModal();
+            if (hud.panelMode === 'card') renderTelemetryCard();
+          }
+        } catch {}
+
+        const { conv, groups, activeGrp, fiveH, weekly } = getQuotaMetrics();
+        const matchedGrp = (base.groupKey && groups.find((g) => g.key === base.groupKey)) || activeGrp;
+        const mFiveH = matchedGrp && Array.isArray(matchedGrp.buckets)
+          ? (matchedGrp.buckets.find((b) => b.windowKind === '5h') || matchedGrp.buckets[0] || fiveH)
+          : fiveH;
+        const mWeekly = matchedGrp && Array.isArray(matchedGrp.buckets)
+          ? (matchedGrp.buckets.find((b) => b.windowKind === 'weekly') || weekly)
+          : weekly;
+
+        const after5Used = mFiveH
+          ? (typeof mFiveH.usedPct === 'number'
+              ? mFiveH.usedPct
+              : (typeof mFiveH.remainingPct === 'number' ? Math.round((100 - mFiveH.remainingPct) * 10) / 10 : null))
+          : null;
+        const afterWeekUsed = mWeekly
+          ? (typeof mWeekly.usedPct === 'number'
+              ? mWeekly.usedPct
+              : (typeof mWeekly.remainingPct === 'number' ? Math.round((100 - mWeekly.remainingPct) * 10) / 10 : null))
+          : null;
+
+        const delta5h = (base.quota5hUsed !== null && after5Used !== null)
+          ? Math.max(0, Math.round((after5Used - base.quota5hUsed) * 10) / 10)
+          : null;
+        const deltaWeek = (base.quotaWeekUsed !== null && afterWeekUsed !== null)
+          ? Math.max(0, Math.round((afterWeekUsed - base.quotaWeekUsed) * 10) / 10)
+          : null;
+        const afterTotTok = conv ? (Number(conv.totalTokens) || 0) : base.totalTokens;
+        const deltaTokens = Math.max(0, afterTotTok - (base.totalTokens || 0));
+
+        showTurnCompletionBubble({
+          groupShort: matchedGrp ? String(matchedGrp.label || 'Gemini').replace(/\s*models?\s*/gi, '').trim() : 'Gemini',
+          delta5h,
+          deltaWeek,
+          rem5h: mFiveH && typeof mFiveH.remainingPct === 'number' ? mFiveH.remainingPct : null,
+          remWeek: mWeekly && typeof mWeekly.remainingPct === 'number' ? mWeekly.remainingPct : null,
+          deltaTokens,
+          ctxPct: conv && conv.contextPct !== null && conv.contextPct !== undefined ? conv.contextPct : null
+        });
+      }, 360);
+    }
+
+    function syncThinkingTransition() {
+      const thinking = isThinkingNow();
+      if (!hud.wasThinking && thinking) {
+        if (hud.turnEndTimer) {
+          clearTimeout(hud.turnEndTimer);
+          hud.turnEndTimer = null;
+        }
+        captureTurnBaseline();
+      } else if (hud.wasThinking && !thinking) {
+        if (hud.prefs.completionEasterEgg !== false) {
+          triggerCelebrate(2400);
+          playCompletionSound();
+        }
+        scheduleTurnCompletionSummary();
+      }
+      hud.wasThinking = thinking;
+    }
+
+    function triggerCelebrate(ms = 2200) {
+      hud.celebrateUntil = Date.now() + ms;
+      if (hud.celebrateTimer) clearTimeout(hud.celebrateTimer);
+      hud.celebrateTimer = setTimeout(() => {
+        hud.celebrateTimer = null;
+        updatePetPoseDom();
+      }, ms + 30);
+      updatePetPoseDom();
+    }
+
+    function updatePetPoseDom() {
+      const root = document.getElementById(IDS.petRoot);
+      if (!root) return;
+      const pose = computePetPose();
+      if (hud.curPose !== pose || root.getAttribute('data-pose') !== pose) {
+        hud.curPose = pose;
+        root.setAttribute('data-pose', pose);
+        const imgs = root.querySelectorAll('.gn-frame');
+        for (const img of imgs) {
+          img.classList.toggle('is-active', img.getAttribute('data-frame') === pose);
+        }
+      }
+    }
+
+    function getQuotaMetrics() {
+      const conv = hud.state && hud.state.conv;
+      const quota = hud.state && hud.state.quota;
+      const groups = (quota && Array.isArray(quota.groups)) ? quota.groups : [];
+      const activeModel = (conv && conv.modelLabel) || '';
+      const activeGrp = (activeModel && /claude|gpt/i.test(activeModel)
+        ? groups.find((g) => /claude/i.test(g.label))
+        : groups.find((g) => /gemini/i.test(g.label) && !/argon/i.test(g.label))) || groups[0] || null;
+      const fiveH = activeGrp && Array.isArray(activeGrp.buckets)
+        ? (activeGrp.buckets.find((b) => b.windowKind === '5h') || activeGrp.buckets[0] || null)
+        : null;
+      const weekly = activeGrp && Array.isArray(activeGrp.buckets)
+        ? activeGrp.buckets.find((b) => b.windowKind === 'weekly')
+        : null;
+      return { conv, groups, activeGrp, fiveH, weekly };
+    }
+
+    function pickRandomDialogue() {
+      const { conv, fiveH, weekly } = getQuotaMetrics();
+      const custom = Array.isArray(hud.prefs.customDialogues) ? hud.prefs.customDialogues : [];
+      const pool = [...custom, ...BUILTIN_DIALOGUES];
+      let chosen = pool[Math.floor(Math.random() * pool.length)] || '好猫猫... ♥';
+      if (pool.length > 1 && chosen === hud.lastDialogueText) {
+        chosen = pool[(pool.indexOf(chosen) + 1) % pool.length];
+      }
+      hud.lastDialogueText = chosen;
+
+      const ctxPct = conv && conv.contextPct !== null && conv.contextPct !== undefined ? String(conv.contextPct) : '0';
+      const q5h = fiveH && typeof fiveH.remainingPct === 'number' ? String(fiveH.remainingPct) : '—';
+      const qWeek = weekly && typeof weekly.remainingPct === 'number' ? String(weekly.remainingPct) : '—';
+      return String(chosen)
+        .replace(/\{quota_5h\}/g, q5h)
+        .replace(/\{quota_week\}/g, qWeek)
+        .replace(/\{ctx_pct\}/g, ctxPct)
+        .replace(/\{ctx_used\}/g, conv ? fmtTok(conv.contextTokens) : '0')
+        .replace(/\{ctx_max\}/g, conv && conv.contextMaxTokens ? fmtTok(conv.contextMaxTokens) : '?')
+        .replace(/\{tokens\}/g, conv ? fmtTok(conv.totalTokens) : '0')
+        .replace(/\{model\}/g, (conv && conv.modelLabel) || 'Gemini');
+    }
+
+    function renderThoughtBubbleContent(withFade = false) {
+      const root = document.getElementById(IDS.petRoot);
+      if (!root) return;
+      root.classList.toggle('is-bubble-open', hud.bubbleStage > 0);
+      if (hud.bubbleStage === 0) return;
+
+      const hit = root.querySelector('.gn-thought-hit');
+      if (!hit) return;
+
+      const buildInner = () => {
+        const { conv, activeGrp, fiveH, weekly } = getQuotaMetrics();
+        if (hud.bubbleStage === 1) {
+          const grpShort = activeGrp ? String(activeGrp.label || 'Gemini').replace(/\s*models?\s*/gi, '').trim() : 'Gemini';
+          const rem5 = fiveH && typeof fiveH.remainingPct === 'number' ? fiveH.remainingPct : null;
+          const remCol = rem5 !== null ? pctColor(rem5, true) : '#3b4b8c';
+          const heroStr = rem5 !== null ? `剩 ${rem5}%` : (conv && conv.contextPct !== null ? `${conv.contextPct}%` : '同步中…');
+          const reset5 = fiveH ? fmtResetCompact(fiveH.resetMs || fiveH.resetAtIso || fiveH.resetAtMs) : '';
+          const weekStr = weekly && typeof weekly.remainingPct === 'number' ? `周剩 ${weekly.remainingPct}%` : '';
+          const ctxStr = conv
+            ? `上下文 ${conv.contextPct ?? '?'}% (${fmtTok(conv.contextTokens)}/${conv.contextMaxTokens ? fmtTok(conv.contextMaxTokens) : '?'})`
+            : '暂无活跃对话';
+          const tokStr = conv ? `已用 ${fmtTok(conv.totalTokens)} tok` : (reset5 ? `${reset5} 重置` : '');
+          const subLine1 = [weekStr, reset5 ? `${reset5}重置` : ''].filter(Boolean).join(' · ');
+          const subLine2 = [ctxStr, tokStr].filter(Boolean).join(' · ');
+          return `
+            <div class="gn-th-label">${esc(grpShort)} 5h 额度</div>
+            <div class="gn-th-hero" style="color:${remCol};">${esc(heroStr)}</div>
+            ${subLine1 ? `<div class="gn-th-sub">${esc(subLine1)}</div>` : ''}
+            <div class="gn-th-sub">${esc(subLine2)}</div>
+          `;
+        }
+        if (hud.bubbleStage === 3 && hud.turnSummary) {
+          const ts = hud.turnSummary;
+          let heroText = '额度 <0.1%';
+          let heroCol = '#10b981';
+          if (typeof ts.delta5h === 'number' && ts.delta5h > 0) {
+            heroText = `5h -${ts.delta5h}%`;
+            heroCol = ts.delta5h >= 5 ? '#ef4444' : '#7c3aed';
+          } else if (typeof ts.deltaWeek === 'number' && ts.deltaWeek > 0) {
+            heroText = `周 -${ts.deltaWeek}%`;
+            heroCol = ts.deltaWeek >= 5 ? '#ef4444' : '#7c3aed';
+          }
+          const remParts = [];
+          if (ts.rem5h !== null) remParts.push(`5h 剩 ${ts.rem5h}%`);
+          if (ts.remWeek !== null) remParts.push(`周剩 ${ts.remWeek}%`);
+          const tokParts = [];
+          if (ts.deltaTokens > 0) tokParts.push(`本轮 +${fmtTok(ts.deltaTokens)} tok`);
+          if (ts.ctxPct !== null) tokParts.push(`上下文 ${ts.ctxPct}%`);
+          return `
+            <div class="gn-th-label">对话完成 · ${esc(ts.groupShort)}</div>
+            <div class="gn-th-hero" style="color:${heroCol};">${esc(heroText)}</div>
+            ${remParts.length ? `<div class="gn-th-sub">${esc(remParts.join(' · '))}</div>` : ''}
+            ${tokParts.length ? `<div class="gn-th-sub">${esc(tokParts.join(' · '))}</div>` : ''}
+            <div class="gn-th-hint">10秒后自动关闭 · 点击关闭</div>
+          `;
+        }
+        const text = hud.currentDialogue || pickRandomDialogue();
+        hud.currentDialogue = text;
+        return `
+          <div class="gn-th-line">${esc(text)}</div>
+        `;
+      };
+
+      const nextHtml = buildInner();
+      if (withFade) {
+        hit.classList.add('is-fading');
+        setTimeout(() => {
+          hit.__gnHtml = nextHtml;
+          hit.innerHTML = nextHtml;
+          hit.classList.remove('is-fading');
+        }, 140);
+      } else if (hit.__gnHtml !== nextHtml) {
+        hit.__gnHtml = nextHtml;
+        hit.innerHTML = nextHtml;
+      }
+    }
+
+    function spawnParticles(clientX, clientY, isCombo) {
+      if (!document.body) return;
+      const glyphs = isCombo ? ['✦', '♥', '✨', '♪', '★'] : ['><', '✦', '♥'];
+      const colors = ['#a78bfa', '#f472b6', '#60a5fa', '#fbbf24'];
+      const count = isCombo ? 6 : 3;
+      for (let i = 0; i < count; i++) {
+        const el = document.createElement('span');
+        el.className = 'gn-particle';
+        el.textContent = glyphs[(i + Math.floor(Math.random() * glyphs.length)) % glyphs.length];
+        el.style.color = colors[(i + Math.floor(Math.random() * colors.length)) % colors.length];
+        el.style.left = `${Math.round(clientX + (Math.random() - 0.5) * 44)}px`;
+        el.style.top = `${Math.round(clientY - 12 + (Math.random() - 0.5) * 20)}px`;
+        document.body.appendChild(el);
+        setTimeout(() => {
+          try { el.remove(); } catch {}
+        }, 950);
+      }
+    }
+
+    function handleCharacterLeftClick(e) {
+      const now = Date.now();
+      if (now - hud.lastPokeAt <= 1600) {
+        hud.pokeCombo += 1;
+      } else {
+        hud.pokeCombo = 1;
+      }
+      hud.lastPokeAt = now;
+
+      const isCombo = hud.pokeCombo >= 3;
+      if (isCombo) {
+        hud.pokeCombo = 0;
+        hud.pokeUntil = 0;
+        triggerCelebrate(2200);
+      } else {
+        hud.pokeUntil = now + 1150;
+        if (hud.pokeTimer) clearTimeout(hud.pokeTimer);
+        hud.pokeTimer = setTimeout(() => {
+          hud.pokeTimer = null;
+          updatePetPoseDom();
+        }, 1170);
+      }
+
+      playPokeReleaseSound(isCombo);
+
+      const nextPat = (hud.prefs.patCount || 0) + 1;
+      hud.prefs.patCount = nextPat;
+      ipcRenderer.invoke('neko-hud:save-prefs', { patCount: nextPat }).catch(() => {});
+
+      const root = document.getElementById(IDS.petRoot);
+      const rect = root ? root.getBoundingClientRect() : null;
+      const px = e && Number.isFinite(e.clientX) ? e.clientX : (rect ? rect.left + rect.width * 0.5 : window.innerWidth - 60);
+      const py = e && Number.isFinite(e.clientY) ? e.clientY : (rect ? rect.top + rect.height * 0.3 : window.innerHeight - 90);
+      spawnParticles(px, py, isCombo);
+
+      // Left-click character opens Stage 1 Bubble (Quota + Context/Tokens) and closes right-click panel
+      clearTurnBubbleTimer();
+      hud.turnSummary = null;
+      if (hud.panelMode) {
+        hud.panelMode = '';
+        syncPanelVisibility();
+      }
+      const wasOpen = hud.bubbleStage > 0;
+      hud.bubbleStage = 1;
+      hud.currentDialogue = '';
+      updatePetPoseDom();
+      renderThoughtBubbleContent(wasOpen);
+      refreshTelemetry(true);
+    }
+
+    function handleBubbleLeftClick(e) {
+      e.stopPropagation();
+      clearTurnBubbleTimer();
+      if (hud.bubbleStage === 1) {
+        hud.bubbleStage = 2;
+        hud.currentDialogue = pickRandomDialogue();
+        renderThoughtBubbleContent(true);
+      } else {
+        hud.bubbleStage = 0;
+        hud.currentDialogue = '';
+        hud.turnSummary = null;
+        renderThoughtBubbleContent(false);
+      }
+    }
+
+    function syncPanelVisibility() {
+      const root = document.getElementById(IDS.petRoot);
+      if (!root) return;
+      root.classList.toggle('is-panel-open', Boolean(hud.panelMode));
+      if (hud.panelMode === 'card') {
+        renderTelemetryCard();
+      } else if (hud.panelMode === 'settings') {
+        renderSettingsPanel();
+      }
+      renderThoughtBubbleContent(false);
+    }
+
+    function renderTelemetryCard() {
+      const root = document.getElementById(IDS.petRoot);
+      if (!root || hud.panelMode !== 'card') return;
+      const panel = root.querySelector('.gn-panel');
+      if (!panel) return;
+
+      const conv = hud.state && hud.state.conv;
+      const quota = hud.state && hud.state.quota;
+      const planName = (hud.state && hud.state.plan && hud.state.plan.planName) || '';
+      const groups = (quota && Array.isArray(quota.groups)) ? quota.groups : [];
+      const pose = computePetPose();
+      const poseInfo = pose === 'eat'
+        ? { cls: 'is-eat', txt: '吃大米思考中…' }
+        : (pose === 'xd'
+            ? { cls: 'is-xd', txt: '被戳啦 ><' }
+            : (pose === 'grin'
+                ? { cls: 'is-grin', txt: '呲牙得意中' }
+                : { cls: '', txt: '待机中' }));
+
+      const ctxTok = conv ? (conv.contextTokens || 0) : 0;
+      const ctxMax = conv ? (conv.contextMaxTokens || 0) : 0;
+      const ctxPct = conv && conv.contextPct !== null && conv.contextPct !== undefined ? conv.contextPct : 0;
+      const ctxCol = pctColor(ctxPct, false);
+      const srvGroups = (conv && conv.tokenBreakdown && Array.isArray(conv.tokenBreakdown.groups))
+        ? conv.tokenBreakdown.groups
+        : [];
+      const hitStr = conv && conv.cacheHitPct !== null && conv.cacheHitPct !== undefined ? `${conv.cacheHitPct}%` : '—';
+
+      let quotaHtml = '<div style="font-size:11px;opacity:.65;">正在同步额度数据…</div>';
+      if (groups.length > 0) {
+        const activeModel = (conv && conv.modelLabel) || '';
+        const sorted = [...groups].sort((a, b) => {
+          const aMatch = activeModel && /claude|gpt/i.test(activeModel) ? /claude/i.test(a.label) : /gemini/i.test(a.label) && !/argon/i.test(a.label);
+          const bMatch = activeModel && /claude|gpt/i.test(activeModel) ? /claude/i.test(b.label) : /gemini/i.test(b.label) && !/argon/i.test(b.label);
+          return (bMatch ? 1 : 0) - (aMatch ? 1 : 0);
+        });
+        quotaHtml = sorted.map((g, idx) => {
+          const shortLbl = String(g.label || 'Quota').replace(/\s*models?\s*/gi, '').trim();
+          const buckets = Array.isArray(g.buckets) ? g.buckets : [];
+          if (idx === 0) {
+            return `
+              <div style="margin-bottom:6px;">
+                <div style="font-size:11px;font-weight:700;margin-bottom:4px;display:flex;justify-content:space-between;">
+                  <span>${esc(shortLbl)}</span>
+                  ${planName ? `<span style="font-size:10px;opacity:.7;">${esc(planName)}</span>` : ''}
+                </div>
+                ${buckets.map((b) => {
+                  const rem = typeof b.remainingPct === 'number' ? b.remainingPct : 0;
+                  const col = pctColor(rem, true);
+                  const reset = fmtResetCountdown(b.resetMs || b.resetAtIso || b.resetAtMs);
+                  return `
+                    <div class="gn-bar-row" style="margin-bottom:4px;">
+                      <div class="gn-bar-meta">
+                        <span>${esc(b.windowLabel || 'Quota')}</span>
+                        <span class="gn-mono" style="color:${col};font-weight:700;">剩 ${rem}%${reset ? ` · ${esc(reset)}` : ''}</span>
+                      </div>
+                      <div class="gn-bar-track"><div class="gn-bar-fill" style="width:${Math.max(2, rem)}%;background:${col};"></div></div>
+                    </div>`;
+                }).join('')}
+              </div>`;
+          }
+          const summaryBits = buckets.map((b) => {
+            const rem = typeof b.remainingPct === 'number' ? b.remainingPct : 0;
+            const col = pctColor(rem, true);
+            return `<span class="gn-mono" style="color:${col};">${esc(b.windowLabel)} ${rem}%</span>`;
+          }).join(' · ');
+          return `
+            <div style="display:flex;justify-content:space-between;align-items:center;font-size:10.5px;padding:2px 0;opacity:.88;">
+              <span>${esc(shortLbl)}</span>
+              <span>${summaryBits || '—'}</span>
+            </div>`;
+        }).join('');
+      }
+
+      const html = `
+        <div class="gn-card-head">
+          <div class="gn-card-title">
+            <span>✦ Gemini 猫娘</span>
+            <span class="gn-state-tag ${poseInfo.cls}">${poseInfo.txt}</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;min-width:0;">
+            <span class="gn-mono" style="font-size:10px;opacity:.75;max-width:96px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc((conv && conv.modelLabel) || '待命')}</span>
+            <button type="button" class="gn-chip" data-gn-pet="close-panel" title="关闭" style="padding:1px 6px;">×</button>
+          </div>
+        </div>
+
+        <div class="gn-card-sec">
+          <div class="gn-card-sec-title">
+            <span>🧠 上下文长度</span>
+            <span class="gn-mono" style="color:${conv ? ctxCol : 'inherit'};font-weight:700;">
+              ${conv ? `${fmtTok(ctxTok)} / ${ctxMax ? fmtTok(ctxMax) : '?'} (${ctxPct}%)` : '暂无活跃对话'}
+            </span>
+          </div>
+          <div class="gn-bar-track" style="height:7px;">
+            <div class="gn-bar-fill" style="width:${conv ? Math.max(2, ctxPct) : 0}%;background:${ctxCol};"></div>
+          </div>
+          ${conv ? `
+            <div class="gn-sub-breakdown">
+              ${srvGroups.slice(0, 3).map((g) => `<span>${esc(g.name.replace('System Prompt', '系统').replace('Chat Messages', '对话').replace('Tools', '工具'))}: ${fmtTok(g.numTokens)}</span>`).join('')}
+              ${conv.compactions > 0 ? `<span style="color:#f59e0b;font-weight:700;">压缩 ${conv.compactions}次</span>` : ''}
+            </div>
+          ` : ''}
+        </div>
+
+        <div class="gn-card-sec">
+          <div class="gn-card-sec-title">
+            <span>📊 本对话已使用 Token</span>
+            <span class="gn-mono">${conv ? `${conv.rounds || 0}轮 ${conv.steps || 0}步${conv.tokPerSec > 0 ? ` · ${conv.tokPerSec} tok/s` : ''}` : '新对话'}</span>
+          </div>
+          ${conv ? `
+            <div class="gn-kv-grid">
+              <div class="gn-kv">
+                <div class="gn-kv-k">累计总 Token</div>
+                <div class="gn-kv-v gn-mono">${fmtTok(conv.totalTokens)} tok</div>
+              </div>
+              <div class="gn-kv">
+                <div class="gn-kv-k">缓存命中率</div>
+                <div class="gn-kv-v gn-mono" style="color:#38bdf8;">${hitStr}</div>
+              </div>
+            </div>
+            <div class="gn-sub-breakdown gn-mono">
+              <span>新输入 ${fmtTok(conv.inputTokens)}</span>
+              <span>· 缓存读 ${fmtTok(conv.cacheReadTokens)}</span>
+              <span>· 输出 ${fmtTok(conv.outputTokens)}</span>
+            </div>
+          ` : '<div style="font-size:11px;opacity:.65;">开始对话后实时统计 Token 用量</div>'}
+        </div>
+
+        <div class="gn-card-sec">
+          <div class="gn-card-sec-title">
+            <span>⚡ 模型剩余额度</span>
+            <span style="font-size:10px;opacity:.65;">已被戳 ${hud.prefs.patCount || 0} 次</span>
+          </div>
+          ${quotaHtml}
+        </div>
+
+        <div class="gn-card-actions">
+          <button type="button" class="gn-btn gn-btn-primary" data-gn-pet="open-observer">🔍 上下文观察窗口</button>
+          <button type="button" class="gn-btn" data-gn-pet="refresh">🔄 刷新</button>
+          <button type="button" class="gn-btn" data-gn-pet="open-settings">⚙️ 挂件设置</button>
+        </div>
+      `;
+
+      if (panel.__gnCardHtml !== html || panel.getAttribute('data-mode') !== 'card') {
+        const prevTop = panel.scrollTop || 0;
+        panel.setAttribute('data-mode', 'card');
+        panel.__gnCardHtml = html;
+        panel.innerHTML = html;
+        panel.scrollTop = prevTop;
+      }
+    }
+
+    function renderSettingsPanel() {
+      const root = document.getElementById(IDS.petRoot);
+      if (!root || hud.panelMode !== 'settings') return;
+      const panel = root.querySelector('.gn-panel');
+      if (!panel) return;
+
+      const curSize = hud.prefs.size || 112;
+      const curBubbleScale = Math.max(0.65, Math.min(1.6, Number(hud.prefs.bubbleScale) || 1));
+      const curBubblePct = Math.round(curBubbleScale * 100);
+      const curOpacity = Math.round((hud.prefs.opacity ?? 1) * 100);
+      const curVol = Math.round((hud.prefs.volume ?? 0.78) * 100);
+      const curSet = hud.prefs.soundSet || 'boing';
+      const a = hud.prefs.anchor || { hAnchor: 'right', vAnchor: 'bottom' };
+      const curCorner = `${a.vAnchor}-${a.hAnchor}`;
+      const customLabel = hud.customAudio && hud.customAudio.name
+        ? hud.customAudio.name
+        : (hud.prefs.customAudioPath ? hud.prefs.customAudioPath.split(/[\\/]/).pop() : '未选择');
+      const customDialogues = Array.isArray(hud.prefs.customDialogues) ? hud.prefs.customDialogues : [];
+      const cf = hud.prefs.customFrames || {};
+      const hasCustomFrame = Boolean(cf.idle || cf.eat || cf.xd || cf.grin);
+
+      panel.setAttribute('data-mode', 'settings');
+      panel.__gnCardHtml = '';
+      panel.innerHTML = `
+        <div class="gn-card-head">
+          <div style="display:flex;align-items:center;gap:6px;">
+            <button type="button" class="gn-chip" data-gn-pet="back-card" title="返回信息卡片">← 返回</button>
+            <span class="gn-card-title">✦ 挂件设置</span>
+          </div>
+          <button type="button" class="gn-chip" data-gn-pet="close-panel" title="关闭">×</button>
+        </div>
+
+        <div class="gn-set-row" style="border-top:0;padding-top:4px;">
+          <div class="gn-set-label"><span>📏 挂件大小</span><span class="gn-mono" data-gn-val="size">${curSize}px</span></div>
+          <input type="range" class="gn-range" min="64" max="180" step="2" value="${curSize}" data-gn-range="size" />
+        </div>
+
+        <div class="gn-set-row">
+          <div class="gn-set-label"><span>💭 气泡大小</span><span class="gn-mono" data-gn-val="bubbleScale">${curBubblePct}% (${Math.round(222 * curBubbleScale)}×${Math.round(152 * curBubbleScale)})</span></div>
+          <div class="gn-chip-row">
+            <button type="button" class="gn-chip" data-gn-bubble-step="-0.1" title="缩小气泡">－</button>
+            ${[
+              [0.8, '小'],
+              [1, '默认'],
+              [1.2, '大'],
+              [1.45, '超大']
+            ].map(([sc, lbl]) => `<button type="button" class="gn-chip ${Math.abs(curBubbleScale - sc) < 0.03 ? 'is-active' : ''}" data-gn-bubble-size="${sc}">${lbl}</button>`).join('')}
+            <button type="button" class="gn-chip" data-gn-bubble-step="0.1" title="放大气泡">＋</button>
+          </div>
+        </div>
+
+        <div class="gn-set-row">
+          <div class="gn-set-label"><span>👁 透明度</span><span class="gn-mono" data-gn-val="opacity">${curOpacity}%</span></div>
+          <input type="range" class="gn-range" min="35" max="100" step="5" value="${curOpacity}" data-gn-range="opacity" />
+        </div>
+
+        <div class="gn-set-row">
+          <div class="gn-set-label">
+            <span>🖼️ 自定义形象</span>
+            ${hasCustomFrame ? `<button type="button" class="gn-chip" data-gn-pet="reset-frames">↺ 恢复默认</button>` : `<span style="font-size:10px;opacity:.65;">当前: 默认 Gemini 娘</span>`}
+          </div>
+          <div class="gn-chip-row">
+            <button type="button" class="gn-chip ${cf.idle ? 'is-active' : ''}" data-gn-pick-frame="idle">更改主形象${cf.idle ? ' ✓' : ''}</button>
+            <button type="button" class="gn-chip ${cf.eat ? 'is-active' : ''}" data-gn-pick-frame="eat">思考差分${cf.eat ? ' ✓' : ''}</button>
+            <button type="button" class="gn-chip ${cf.xd ? 'is-active' : ''}" data-gn-pick-frame="xd">戳一戳差分${cf.xd ? ' ✓' : ''}</button>
+            <button type="button" class="gn-chip ${cf.grin ? 'is-active' : ''}" data-gn-pick-frame="grin">彩蛋差分${cf.grin ? ' ✓' : ''}</button>
+          </div>
+        </div>
+
+        <div class="gn-set-row">
+          <div class="gn-set-label">
+            <span>💬 自定义气泡对话</span>
+            <span style="font-size:10px;opacity:.65;">已添加 ${customDialogues.length} 条</span>
+          </div>
+          <div class="gn-input-row">
+            <input id="gn-custom-dialogue-input" type="text" class="gn-text-input" maxlength="120" placeholder="输入自定义气泡台词（支持 {quota_5h} {ctx_pct}）" />
+            <button type="button" class="gn-chip is-active" data-gn-pet="add-dialogue">+ 添加对话</button>
+          </div>
+          ${customDialogues.length > 0 ? `
+            <div class="gn-dialogue-list">
+              ${customDialogues.map((line, i) => `
+                <div class="gn-dialogue-item">
+                  <span title="${esc(line)}">${esc(line)}</span>
+                  <button type="button" class="gn-del-btn" data-gn-del-dialogue="${i}" title="删除">×</button>
+                </div>
+              `).join('')}
+            </div>
+          ` : '<div style="font-size:10px;opacity:.6;margin-top:4px;">添加后在第二次左键单击气泡时随机出现</div>'}
+        </div>
+
+        <div class="gn-set-row">
+          <div class="gn-set-label">
+            <span>🔊 戳一下声音</span>
+            <button type="button" class="gn-chip ${hud.prefs.soundEnabled ? 'is-active' : ''}" data-gn-pet="toggle-sound">${hud.prefs.soundEnabled ? '已开启' : '已静音'}</button>
+          </div>
+          <div class="gn-chip-row" style="margin-bottom:6px;">
+            ${[
+              ['boing', 'Q弹叮咚'],
+              ['nya', '软萌喵呜'],
+              ['duck', '小黄鸭'],
+              ['custom', '自定义']
+            ].map(([id, lbl]) => `<button type="button" class="gn-chip ${curSet === id ? 'is-active' : ''}" data-gn-soundset="${id}">${lbl}</button>`).join('')}
+          </div>
+          <div class="gn-set-label"><span style="font-size:10.5px;opacity:.8;">音量</span><span class="gn-mono" data-gn-val="volume">${curVol}%</span></div>
+          <input type="range" class="gn-range" min="0" max="100" step="5" value="${curVol}" data-gn-range="volume" />
+          <div class="gn-card-actions" style="margin-top:6px;">
+            <button type="button" class="gn-btn" data-gn-pet="test-sound">▶ 试听</button>
+            <button type="button" class="gn-btn" data-gn-pet="pick-audio">🎵 选本地音频</button>
+          </div>
+          ${curSet === 'custom' ? `<div style="font-size:10px;opacity:.75;margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">当前自定义: ${esc(customLabel)}</div>` : ''}
+        </div>
+
+        <div class="gn-set-row">
+          <div class="gn-set-label">
+            <span>📊 输入框下方统计栏</span>
+            <button type="button" class="gn-chip ${hud.prefs.showStatsBar !== false ? 'is-active' : ''}" data-gn-pet="toggle-statsbar">${hud.prefs.showStatsBar !== false ? '显示中' : '已隐藏'}</button>
+          </div>
+          <div class="gn-set-label" style="margin-top:4px;">
+            <span>💬 对话完成额度气泡 (10s)</span>
+            <button type="button" class="gn-chip ${hud.prefs.turnCostBubble !== false ? 'is-active' : ''}" data-gn-pet="toggle-turn-bubble">${hud.prefs.turnCostBubble !== false ? '已开启' : '已关闭'}</button>
+          </div>
+          <div class="gn-set-label" style="margin-top:4px;">
+            <span>😄 思考完呲牙笑彩蛋</span>
+            <button type="button" class="gn-chip ${hud.prefs.completionEasterEgg !== false ? 'is-active' : ''}" data-gn-pet="toggle-easter">${hud.prefs.completionEasterEgg !== false ? '已开启' : '已关闭'}</button>
+          </div>
+          <div class="gn-set-label" style="margin-top:4px;">
+            <span>🔔 思考完提示音</span>
+            <button type="button" class="gn-chip ${hud.prefs.completionSound ? 'is-active' : ''}" data-gn-pet="toggle-done-sound">${hud.prefs.completionSound ? '已开启' : '已关闭'}</button>
+          </div>
+        </div>
+
+        <div class="gn-set-row">
+          <div class="gn-set-label"><span>📍 贴边停靠角落 (支持直接拖拽)</span></div>
+          <div class="gn-chip-row">
+            ${[
+              ['bottom-right', '右下角'],
+              ['bottom-left', '左下角'],
+              ['top-right', '右上角'],
+              ['top-left', '左上角']
+            ].map(([k, lbl]) => `<button type="button" class="gn-chip ${curCorner === k ? 'is-active' : ''}" data-gn-corner="${k}">${lbl}</button>`).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+    function updatePetFrameSrcs() {
+      const root = document.getElementById(IDS.petRoot);
+      if (!root) return;
+      const imgs = root.querySelectorAll('.gn-frame');
+      for (const img of imgs) {
+        const k = img.getAttribute('data-frame');
+        const src = hud.frames[k] || hud.frames.idle || hud.defaultFrames[k] || hud.defaultFrames.idle || '';
+        if (src && img.getAttribute('src') !== src) {
+          img.setAttribute('src', src);
+        }
+      }
+    }
+
+    function updatePetWidget() {
+      const root = document.getElementById(IDS.petRoot);
+      if (!root) return;
+      syncThinkingTransition();
+      updatePetPoseDom();
+      if (hud.bubbleStage > 0) {
+        renderThoughtBubbleContent(false);
+      }
+      if (hud.panelMode === 'card') {
+        renderTelemetryCard();
+      }
+    }
+
+    function mountPetWidget() {
+      if (hud.prefs.enabled === false) {
+        const old = document.getElementById(IDS.petRoot);
+        if (old) old.remove();
+        return;
+      }
+      if (document.getElementById(IDS.petRoot) || !document.body) return;
+
+      const root = document.createElement('div');
+      root.id = IDS.petRoot;
+      root.setAttribute('data-pose', 'idle');
+
+      const frameKeys = ['idle', 'eat', 'grin', 'xd'];
+      const framesHtml = frameKeys.map((k) => {
+        const src = hud.frames[k] || hud.frames.idle || hud.defaultFrames[k] || hud.defaultFrames.idle || '';
+        return `<img class="gn-frame ${k === 'idle' ? 'is-active' : ''}" data-frame="${k}" alt="Gemini Neko ${k}" draggable="false" ${src ? `src="${src}"` : ''} />`;
+      }).join('');
+
+      root.innerHTML = `
+        <div class="gn-stage">
+          <div class="gn-thought-wrap">
+            <svg class="gn-thought-svg" viewBox="0 0 222 152" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <ellipse cx="111" cy="57" rx="102" ry="50" fill="#ffffff" fill-opacity="0.96" stroke="#293978" stroke-width="4" />
+              <ellipse cx="150" cy="116" rx="11" ry="7.5" fill="#ffffff" fill-opacity="0.96" stroke="#293978" stroke-width="3.2" />
+              <ellipse cx="168" cy="134" rx="7" ry="5" fill="#ffffff" fill-opacity="0.96" stroke="#293978" stroke-width="3" />
+            </svg>
+            <div class="gn-thought-hit"></div>
+          </div>
+
+          <div class="gn-panel"></div>
+
+          <button type="button" class="gn-avatar-btn" aria-label="Gemini 猫娘挂件" title="">
+            <div class="gn-avatar-flip">
+              <div class="gn-avatar-anim">
+                ${framesHtml}
+              </div>
+            </div>
+          </button>
+        </div>
+      `;
+
+      document.body.appendChild(root);
+      applyPetPositionFromAnchor();
+
+      const avatarBtn = root.querySelector('.gn-avatar-btn');
+      const thoughtHit = root.querySelector('.gn-thought-hit');
+
+      // Right-click on character toggles Image 4 telemetry card (with standalone Settings button)
+      avatarBtn.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (hud.panelMode) {
+          hud.panelMode = '';
+        } else {
+          hud.panelMode = 'card';
+          refreshTelemetry(true);
+        }
+        syncPanelVisibility();
+      });
+
+      // Bubble left-click: Stage 1 -> Stage 2 (dialogue) -> Close
+      if (thoughtHit) {
+        thoughtHit.addEventListener('click', (e) => {
+          handleBubbleLeftClick(e);
+        });
+      }
+
+      // Pointer drag + quarter-edge snap (flush 0px!) + Q-elastic press/poke
+      let drag = null;
+
+      avatarBtn.addEventListener('pointerdown', (e) => {
+        if (e.pointerType === 'mouse' && e.button !== 0) return;
+        e.stopPropagation();
+        const r = root.getBoundingClientRect();
+        drag = {
+          id: e.pointerId,
+          sx: e.clientX,
+          sy: e.clientY,
+          ox: r.left,
+          oy: r.top,
+          moved: false,
+          t: Date.now()
+        };
+        avatarBtn.classList.add('is-pressed');
+        try { avatarBtn.setPointerCapture(e.pointerId); } catch {}
+        playPressSound();
+      });
+
+      avatarBtn.addEventListener('pointermove', (e) => {
+        if (!drag || e.pointerId !== drag.id) return;
+        const dx = e.clientX - drag.sx;
+        const dy = e.clientY - drag.sy;
+        if (!drag.moved && dx * dx + dy * dy >= 16) {
+          drag.moved = true;
+          avatarBtn.classList.remove('is-pressed');
+          root.classList.add('is-dragging');
+        }
+        if (!drag.moved) return;
+        setPetLeftTop(drag.ox + dx, drag.oy + dy);
+      });
+
+      function finishDragOrPoke(e, canceled) {
+        if (!drag || e.pointerId !== drag.id) return;
+        const curDrag = drag;
+        drag = null;
+        avatarBtn.classList.remove('is-pressed');
+        root.classList.remove('is-dragging');
+        try { avatarBtn.releasePointerCapture(e.pointerId); } catch {}
+        if (canceled) return;
+
+        if (!curDrag.moved && Date.now() - curDrag.t < 750) {
+          handleCharacterLeftClick(e);
+          return;
+        }
+
+        // Quarter-region edge snap flush to viewport border (0px on left/right/bottom)
+        const vw = Math.max(200, window.innerWidth || 1280);
+        const vh = Math.max(200, window.innerHeight || 800);
+        const sz = hud.prefs.size || 112;
+        const r = root.getBoundingClientRect();
+        const cx = r.left + sz / 2;
+        const cy = r.top + sz / 2;
+
+        let targetL = r.left;
+        let targetT = r.top;
+        if (cx < vw * 0.25) targetL = 0;
+        else if (cx > vw * 0.75) targetL = vw - sz;
+
+        if (cy < vh * 0.25) targetT = 36;
+        else if (cy > vh * 0.75) targetT = vh - sz;
+
+        const finalPos = setPetLeftTop(targetL, targetT) || { left: targetL, top: targetT };
+        const newAnchor = computeAnchorFromRect(finalPos.left, finalPos.top, sz);
+        savePrefsPatch({ anchor: newAnchor });
+      }
+
+      avatarBtn.addEventListener('pointerup', (e) => finishDragOrPoke(e, false));
+      avatarBtn.addEventListener('pointercancel', (e) => finishDragOrPoke(e, true));
+
+      function addCustomDialogueFromInput() {
+        const inp = root.querySelector('#gn-custom-dialogue-input');
+        if (!inp) return;
+        const text = String(inp.value || '').trim().slice(0, 120);
+        if (!text) return;
+        const prev = Array.isArray(hud.prefs.customDialogues) ? hud.prefs.customDialogues : [];
+        if (prev.includes(text)) {
+          inp.value = '';
+          return;
+        }
+        const next = [text, ...prev].slice(0, 60);
+        savePrefsPatch({ customDialogues: next }).then(() => {
+          renderSettingsPanel();
+        });
+      }
+
+      // Click handlers inside right-click card & settings panel
+      root.addEventListener('click', (e) => {
+        const actEl = e.target && e.target.closest ? e.target.closest('[data-gn-pet]') : null;
+        if (actEl) {
+          e.stopPropagation();
+          const act = actEl.getAttribute('data-gn-pet');
+          if (act === 'close-panel') {
+            hud.panelMode = '';
+            syncPanelVisibility();
+          } else if (act === 'open-settings') {
+            hud.panelMode = 'settings';
+            syncPanelVisibility();
+          } else if (act === 'back-card') {
+            hud.panelMode = 'card';
+            syncPanelVisibility();
+          } else if (act === 'open-observer') {
+            hud.panelMode = '';
+            syncPanelVisibility();
+            openObserverModal();
+          } else if (act === 'refresh') {
+            refreshTelemetry(true);
+          } else if (act === 'add-dialogue') {
+            addCustomDialogueFromInput();
+          } else if (act === 'reset-frames') {
+            ipcRenderer.invoke('neko-hud:reset-frames', '').then((res) => {
+              if (res && res.ok) {
+                if (res.prefs) hud.prefs = { ...hud.prefs, ...res.prefs };
+                if (res.frames) hud.frames = res.frames;
+                updatePetFrameSrcs();
+                renderSettingsPanel();
+              }
+            }).catch(() => {});
+          } else if (act === 'toggle-sound') {
+            const next = !hud.prefs.soundEnabled;
+            savePrefsPatch({ soundEnabled: next });
+            if (next) warmActiveSounds();
+            else suspendAudioNow();
+            renderSettingsPanel();
+          } else if (act === 'test-sound') {
+            if (!hud.prefs.soundEnabled) savePrefsPatch({ soundEnabled: true });
+            warmActiveSounds();
+            playPokeReleaseSound(false);
+          } else if (act === 'pick-audio') {
+            ipcRenderer.invoke('neko-hud:pick-audio').then((res) => {
+              if (res && res.ok) {
+                if (res.prefs) hud.prefs = { ...hud.prefs, ...res.prefs };
+                if (res.customAudio) {
+                  hud.customAudio = res.customAudio;
+                  delete decodedAudio.custom;
+                  delete decodingAudio.custom;
+                  warmActiveSounds();
+                  playPokeReleaseSound(false);
+                }
+                renderSettingsPanel();
+              }
+            }).catch(() => {});
+          } else if (act === 'toggle-statsbar') {
+            savePrefsPatch({ showStatsBar: hud.prefs.showStatsBar === false });
+            mountStatsBarOnly();
+            updateStatsBar();
+            renderSettingsPanel();
+          } else if (act === 'toggle-turn-bubble') {
+            savePrefsPatch({ turnCostBubble: hud.prefs.turnCostBubble === false });
+            renderSettingsPanel();
+          } else if (act === 'toggle-easter') {
+            savePrefsPatch({ completionEasterEgg: hud.prefs.completionEasterEgg === false });
+            renderSettingsPanel();
+          } else if (act === 'toggle-done-sound') {
+            savePrefsPatch({ completionSound: !hud.prefs.completionSound });
+            renderSettingsPanel();
+          }
+          return;
+        }
+
+        const bubbleSizeEl = e.target && e.target.closest ? e.target.closest('[data-gn-bubble-size]') : null;
+        if (bubbleSizeEl) {
+          e.stopPropagation();
+          const nextScale = Math.max(0.65, Math.min(1.6, Math.round(Number(bubbleSizeEl.getAttribute('data-gn-bubble-size')) * 100) / 100));
+          savePrefsPatch({ bubbleScale: nextScale });
+          renderSettingsPanel();
+          return;
+        }
+
+        const bubbleStepEl = e.target && e.target.closest ? e.target.closest('[data-gn-bubble-step]') : null;
+        if (bubbleStepEl) {
+          e.stopPropagation();
+          const cur = Math.max(0.65, Math.min(1.6, Number(hud.prefs.bubbleScale) || 1));
+          const delta = Number(bubbleStepEl.getAttribute('data-gn-bubble-step')) || 0;
+          const nextScale = Math.max(0.65, Math.min(1.6, Math.round((cur + delta) * 100) / 100));
+          savePrefsPatch({ bubbleScale: nextScale });
+          renderSettingsPanel();
+          return;
+        }
+
+        const pickFrameEl = e.target && e.target.closest ? e.target.closest('[data-gn-pick-frame]') : null;
+        if (pickFrameEl) {
+          e.stopPropagation();
+          const fKey = pickFrameEl.getAttribute('data-gn-pick-frame');
+          ipcRenderer.invoke('neko-hud:pick-frame', fKey).then((res) => {
+            if (res && res.ok) {
+              if (res.prefs) hud.prefs = { ...hud.prefs, ...res.prefs };
+              if (res.frameKey && res.dataUrl) {
+                hud.frames[res.frameKey] = res.dataUrl;
+                updatePetFrameSrcs();
+              }
+              renderSettingsPanel();
+            }
+          }).catch(() => {});
+          return;
+        }
+
+        const delDlgEl = e.target && e.target.closest ? e.target.closest('[data-gn-del-dialogue]') : null;
+        if (delDlgEl) {
+          e.stopPropagation();
+          const idx = Number(delDlgEl.getAttribute('data-gn-del-dialogue'));
+          const prev = Array.isArray(hud.prefs.customDialogues) ? hud.prefs.customDialogues : [];
+          if (Number.isInteger(idx) && idx >= 0 && idx < prev.length) {
+            const next = prev.filter((_, i) => i !== idx);
+            savePrefsPatch({ customDialogues: next }).then(() => {
+              renderSettingsPanel();
+            });
+          }
+          return;
+        }
+
+        const setEl = e.target && e.target.closest ? e.target.closest('[data-gn-soundset]') : null;
+        if (setEl) {
+          e.stopPropagation();
+          const set = setEl.getAttribute('data-gn-soundset');
+          savePrefsPatch({ soundSet: set, soundEnabled: true });
+          warmActiveSounds();
+          playPokeReleaseSound(false);
+          renderSettingsPanel();
+          return;
+        }
+
+        const cornerEl = e.target && e.target.closest ? e.target.closest('[data-gn-corner]') : null;
+        if (cornerEl) {
+          e.stopPropagation();
+          const key = cornerEl.getAttribute('data-gn-corner');
+          const [vAnchor, hAnchor] = key.split('-');
+          const anchor = {
+            v: 2,
+            hAnchor: hAnchor === 'left' ? 'left' : 'right',
+            hDist: 0,
+            vAnchor: vAnchor === 'top' ? 'top' : 'bottom',
+            vDist: vAnchor === 'top' ? 36 : 0
+          };
+          savePrefsPatch({ anchor });
+          renderSettingsPanel();
+        }
+      });
+
+      // Handle Enter inside custom dialogue input
+      root.addEventListener('keydown', (e) => {
+        if (e.target && e.target.id === 'gn-custom-dialogue-input') {
+          e.stopPropagation();
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            addCustomDialogueFromInput();
+          } else if (e.key === 'Escape') {
+            e.preventDefault();
+            hud.panelMode = '';
+            syncPanelVisibility();
+          }
+        }
+      });
+
+      // Live slider input without CSS transition jitter
+      root.addEventListener('input', (e) => {
+        const range = e.target && e.target.closest ? e.target.closest('[data-gn-range]') : null;
+        if (!range) return;
+        const kind = range.getAttribute('data-gn-range');
+        const val = Number(range.value);
+        if (kind === 'size') {
+          root.classList.add('is-resizing');
+          hud.prefs.size = val;
+          const lbl = root.querySelector('[data-gn-val="size"]');
+          if (lbl) lbl.textContent = `${val}px`;
+          applyPetPositionFromAnchor();
+        } else if (kind === 'opacity') {
+          hud.prefs.opacity = Math.round(val) / 100;
+          const lbl = root.querySelector('[data-gn-val="opacity"]');
+          if (lbl) lbl.textContent = `${val}%`;
+          applyPetPositionFromAnchor();
+        } else if (kind === 'volume') {
+          hud.prefs.volume = Math.round(val) / 100;
+          const lbl = root.querySelector('[data-gn-val="volume"]');
+          if (lbl) lbl.textContent = `${val}%`;
+        }
+      });
+
+      root.addEventListener('change', (e) => {
+        const range = e.target && e.target.closest ? e.target.closest('[data-gn-range]') : null;
+        if (!range) return;
+        root.classList.remove('is-resizing');
+        const kind = range.getAttribute('data-gn-range');
+        const val = Number(range.value);
+        if (kind === 'size') {
+          savePrefsPatch({ size: val });
+        } else if (kind === 'opacity') {
+          savePrefsPatch({ opacity: Math.round(val) / 100 });
+        } else if (kind === 'volume') {
+          savePrefsPatch({ volume: Math.round(val) / 100 });
+        }
+      });
+
+      updatePetWidget();
     }
 
     // ---- Component B: In-Window Context Observer Modal ----
@@ -664,7 +2614,7 @@
                       <div class="gn-bar-row">
                         <div class="gn-bar-meta"><span>${esc(b.windowLabel)}</span><span class="gn-mono" style="color:${col};">${rem}%</span></div>
                         <div class="gn-bar-track"><div class="gn-bar-fill" style="width:${Math.max(2, rem)}%;background:${col};"></div></div>
-                        <div style="font-size:9.5px;opacity:.6;text-align:right;">${esc(fmtResetCountdown(b.resetAtIso || b.resetAtMs))}</div>
+                        <div style="font-size:9.5px;opacity:.6;text-align:right;">${esc(fmtResetCountdown(b.resetMs || b.resetAtIso || b.resetAtMs))}</div>
                       </div>`;
                   }).join('')}
                 </div>
@@ -753,6 +2703,7 @@
           }
           hud.state = data;
           ensureStatsBar();
+          updatePetWidget();
           if (hud.modalOpen) renderObserverModal();
         }
       } catch {} finally {
@@ -761,14 +2712,44 @@
     }
 
     async function bootHud() {
+      try {
+        const boot = await ipcRenderer.invoke('neko-hud:get-boot');
+        if (boot && boot.prefs) hud.prefs = { ...hud.prefs, ...boot.prefs };
+        if (boot && boot.frames) hud.frames = boot.frames;
+        if (boot && boot.defaultFrames) hud.defaultFrames = boot.defaultFrames;
+        if (boot && boot.sounds) hud.soundsB64 = boot.sounds;
+        if (boot && boot.customAudio) hud.customAudio = boot.customAudio;
+      } catch {}
+
       const startDom = () => {
         if (!document.body) return;
-        const legacyPet = document.getElementById('gemini-neko-pet-root');
-        if (legacyPet) legacyPet.remove();
         syncActiveConversation();
         injectStyles();
         ensureStatsBar();
+        mountPetWidget();
         refreshTelemetry(true);
+
+        // IME composition tracking + lazy audio unlock
+        document.addEventListener('compositionstart', () => {
+          hud.composing = true;
+        }, true);
+        document.addEventListener('compositionend', () => {
+          hud.composing = false;
+        }, true);
+
+        const audioUnlock = (ev) => {
+          if (hud.composing || (ev && (ev.isComposing === true || ev.keyCode === 229))) return;
+          if (!hud.prefs.soundEnabled) return;
+          warmActiveSounds();
+          document.removeEventListener('pointerdown', audioUnlock, true);
+          document.removeEventListener('keydown', audioUnlock, true);
+        };
+        document.addEventListener('pointerdown', audioUnlock, true);
+        document.addEventListener('keydown', audioUnlock, true);
+        document.addEventListener('visibilitychange', () => {
+          if (document.hidden) suspendAudioNow();
+          else refreshTelemetry(false);
+        });
 
         let rafScheduled = false;
         const obs = new MutationObserver(() => {
@@ -778,6 +2759,11 @@
             rafScheduled = false;
             syncActiveConversation();
             if (mountStatsBarOnly()) updateStatsBar();
+            if (hud.prefs.enabled !== false && !document.getElementById(IDS.petRoot)) {
+              mountPetWidget();
+            }
+            syncThinkingTransition();
+            updatePetPoseDom();
           });
         });
         obs.observe(document.body, {
@@ -796,9 +2782,24 @@
 
         window.addEventListener('popstate', scheduleNavSync);
         window.addEventListener('hashchange', scheduleNavSync);
+
+        let resizeTimer = null;
+        window.addEventListener('resize', () => {
+          if (resizeTimer) clearTimeout(resizeTimer);
+          resizeTimer = setTimeout(() => {
+            resizeTimer = null;
+            requestAnimationFrame(applyPetPositionFromAnchor);
+          }, 90);
+        });
+
         document.addEventListener('click', (e) => {
+          const petRoot = document.getElementById(IDS.petRoot);
           const modalEl = document.getElementById(IDS.modal);
-          if (modalEl && modalEl.contains(e.target)) {
+          if (hud.panelMode && petRoot && !petRoot.contains(e.target)) {
+            hud.panelMode = '';
+            syncPanelVisibility();
+          }
+          if ((petRoot && petRoot.contains(e.target)) || (modalEl && modalEl.contains(e.target))) {
             return;
           }
           if (e.target && typeof e.target.closest === 'function') {
@@ -807,10 +2808,26 @@
             }
           }
         }, true);
+
         document.addEventListener('keydown', (e) => {
-          if (e.key === 'Escape' && hud.modalOpen) {
-            closeObserverModal();
-            return;
+          if (e.target && e.target.id === 'gn-custom-dialogue-input') return;
+          if (e.key === 'Escape') {
+            if (hud.modalOpen) {
+              closeObserverModal();
+              return;
+            }
+            if (hud.panelMode) {
+              hud.panelMode = '';
+              syncPanelVisibility();
+              return;
+            }
+            if (hud.bubbleStage > 0) {
+              clearTurnBubbleTimer();
+              hud.bubbleStage = 0;
+              hud.turnSummary = null;
+              renderThoughtBubbleContent(false);
+              return;
+            }
           }
           if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'O' || e.key === 'o')) {
             scheduleNavSync();
@@ -822,8 +2839,10 @@
           pollTick += 1;
           const switched = syncActiveConversation();
           if (mountStatsBarOnly()) updateStatsBar();
+          syncThinkingTransition();
+          updatePetPoseDom();
           if (!switched && pollTick % 6 === 0) {
-            const busy = detectDomBusy() || Boolean(hud.state && hud.state.conv && hud.state.conv.isThinking);
+            const busy = isThinkingNow();
             refreshTelemetry(busy);
           }
         }, 250);

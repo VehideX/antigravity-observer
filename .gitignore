@@ -5,6 +5,7 @@ Thumbs.db
 hud_prefs.json
 runtime_server.json
 server_info.json
+assets/custom/
 *.bak
 *.neko-staged
 *.prev.*
